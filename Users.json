@@ -1,0 +1,12 @@
+{
+    "master" : [
+      {
+        "user": "notme",
+        "user_id": 1234567
+      },
+      {
+       "user": "erikzi@student.chalmers.se",
+       "user_id": 56789
+      }
+    ]
+  }
