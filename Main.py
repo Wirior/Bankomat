@@ -47,10 +47,9 @@ def Log_in():
     """
     user_id, username = Username()  # Getting user ID and username
     
-    if user_id:
-        account_num = Password(user_id=user_id, username=username)  # Getting account number
-        if account_num:
-            Account(account_num=account_num)  # Accessing user's account
+    if user_id and username: account_num = Password(user_id=user_id, username=username)  # Getting account number
+    
+    if account_num: Account(account_num=account_num)  # Accessing user's account
     return
 
 def Username():
@@ -195,16 +194,14 @@ def Account_Transaction(account_num):
         os.system('cls')
         print("Bankomat \n")
 
-        if answers["transaction"] == 'Tillbaka':
-            break  # Going back to the previous menu
+        if answers["transaction"] == 'Tillbaka': break  # Going back to the previous menu
 
         try:
             text1 = ("Skriv in " + answers["transaction"] + " beloppet \n")  # Prompting for transaction amount
             text2 = ("Passa på att göra en kort anteckning till " + answers["transaction"] + "\n")  # Prompting for a note
             value = abs(float(input(text1)))  # Getting transaction amount
 
-            if answers["transaction"] == 'Uttag':
-                value = value * -1  # Negating the amount for withdrawals
+            if answers["transaction"] == 'Uttag': value = value * -1  # Negating the amount for withdrawals
 
             if account_balance[0] + value >= 0:
                 note = input(text2)  # Getting transaction note
