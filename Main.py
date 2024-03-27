@@ -46,10 +46,9 @@ def Log_in():
     Function for user login.
     """
     user_id, username = Username()  # Getting user ID and username
-    
     if user_id and username: account_num = Password(user_id=user_id, username=username)  # Getting account number
-    
     if account_num: Account(account_num=account_num)  # Accessing user's account
+    
     return
 
 def Username():
