@@ -3,6 +3,8 @@ import time  # Importing the time module for time-related functions
 import json  # Importing the json module for JSON file operations
 import inquirer  # Importing the inquirer module for interactive user prompts
 from datetime import date  # Importing the date class from the datetime module
+from getpass import getpass # Importing the hidden password module for user input
+import random # Importing random function for slump actions
 
 from email_validator import validate_email, EmailNotValidError  # Importing email validation functions
 
@@ -46,8 +48,9 @@ def Log_in():
     Function for user login.
     """
     user_id, username = Username()  # Getting user ID and username
-    if user_id and username: account_num = Password(user_id=user_id, username=username)  # Getting account number
-    if account_num: Account(account_num=account_num)  # Accessing user's account
+    if user_id and username:
+        account_num = Password(user_id=user_id, username=username)  # Getting account number
+        if account_num: Account(account_num=account_num)  # Accessing user's account
     
     return
 
@@ -66,7 +69,7 @@ def Username():
         os.system('cls')
         print("Bankomat \n")
 
-        username = input("Username: ")  # Getting username from user
+        username = input("Användarnamn: ")  # Getting username from user
         trys += 1  # Incrementing attempt counter
 
         # Locating the username in the .json file
@@ -75,11 +78,11 @@ def Username():
                 user_id = i["user_id"]  # Getting user ID
                 return user_id, username  # Returning user ID and username
             if trys >= 4:
-                print("Too many unsucessfull trys in a row, redirecting you to the mainpage.")
+                print("För många konsekutiva misslyckade försök, omdirigerar dig till huvudsidan.")
                 time.sleep(1.5)
                 return 0,0 # Redirecting to the main page if too many unsuccessful attempts
 
-        print("The username you submitted does not exist")
+        print("Användarnamnen som har skrivits in existerar inte")
         time.sleep(1.5)
 
 
@@ -108,15 +111,15 @@ def Password(user_id, username):
         # Displaying the text on the screen
         os.system('cls')
         print("Bankomat \n")
-        print("Username:", username)
+        print("Användarnamn:", username)
 
         # Check if the current number of tries exceeds the limit (4 tries)
         if trys <= 0:
-            print("You have locked your account, please contact support to unlock your account.")
-            a = input("Press enter to go back to start...")  # Press enter to continue
+            print("Du har låst ditt konto, var vänlig och kontakta kundtjänst för att låsa upp ditt kont")
+            a = input("Tryck enter för att gå tillbaka till start...")  # Press enter to continue
             return
-
-        password = input("Password: ")  # Getting password from user
+        
+        password = getpass("Lösenord: " + u'\U0001f512')  # Getting password from user
 
         # Check if input password is the same as the stored password
         if password == user_psw:
@@ -126,8 +129,8 @@ def Password(user_id, username):
         # If the password is incorrect
         else:
             trys -= 1  # Decrementing the number of tries
-            print("The password was incorrect")
-            print("You have ", trys, " left")
+            print("Felaktigt lösenord")
+            print("Du har ", trys, " försök kvar")
             time.sleep(2.5)
             Passwords_data["password"][count]["trys"] = trys  # Updating the number of tries in the data
             newData = json.dumps(Passwords_data, indent=4)
@@ -167,7 +170,7 @@ def Account_Transaction(account_num):
     """
     Function to perform a transaction.
     """
-    # Read the pasword file
+    # Read the Account file
     a = open(Path_Accounts, "r", encoding='utf-8')
     Accounts_data = json.load(a)
     a.close
@@ -197,7 +200,7 @@ def Account_Transaction(account_num):
 
         try:
             text1 = ("Skriv in " + answers["transaction"] + " beloppet \n")  # Prompting for transaction amount
-            text2 = ("Passa på att göra en kort anteckning till " + answers["transaction"] + "\n")  # Prompting for a note
+            text2 = ("Göra en kort anteckning till " + answers["transaction"] + "\n")  # Prompting for a note
             value = abs(float(input(text1)))  # Getting transaction amount
 
             if answers["transaction"] == 'Uttag': value = value * -1  # Negating the amount for withdrawals
@@ -273,13 +276,92 @@ def New_user():
     """
     Function to create a new user.
     """
-    os.system('cls')
-    print("Bankomat \n")
+    # Read the Username data
+    with open(Path_Users, "r") as u: # Opening the Users.json file in read mode
+        user_data = json.load(u) # Loading user data from the JSON file
+    
+    # Read the pasword file
+    with open(Path_Passwords, "r") as p: Passwords_data = json.load(p)
 
-    usr = input("Skriv in din mejladress \n")  # Prompting for email address
-    if check(usr):
-        print(True)
+    # Read the Account file
+    with open(Path_Accounts, "r", encoding='utf-8') as a: Accounts_data = json.load(a)
+    
+    username = ""  # Initializing username variable
+    while True:
+        os.system('cls')  # Clearing the screen
+        print("Bankomat \n")
 
+        if username == "":
+            usr = input("Skriv in din mejladress: ")  # Prompting for email address
+            username = check(usr)  # Validating the email address
+        
+        # Locating the username in the .json file
+        for i in user_data['master']:
+            if username == i["user"]:
+                print("Användarnamnet existerar redan, vänligen skriv in ett nytt användarnamn.\n")
+                input("Tryck enter för att fortsätta...")
+                username = ""  # Resetting username if it already exists
+
+        if username != "":
+            psw = getpass("Lösenord: " + u'\U0001f512')  # Prompting for password
+            print("Vänligen upprepa lösenordet")
+            c_psw = getpass("Lösenord: " + u'\U0001f512')  # Prompting for password confirmation
+
+            # Validating passwords
+            if psw == "" or c_psw == "":
+                return
+            elif psw == c_psw:
+                break
+            else:
+                print("Lösenorden matchar inte skriv in ditt lösenord igen")
+                time.sleep(2)
+
+    # Creating user_id
+    while True:
+        user_id = random.randrange(100000, 999999)  # Generating a random user ID
+        trigger = False
+        for i in user_data['master']:
+            if user_id == i["user_id"]:
+                trigger = True
+        if not trigger:
+            break
+
+    # Creating account id
+    while True:
+        account = random.randrange(100000, 999999)  # Generating a random account ID
+        trigger = False
+        for i in Passwords_data['password']:
+            if account == i["account"]:
+                trigger = True
+        if not trigger:
+            break
+
+    # Appending new user data
+    user_data["master"].append({"user":username,"user_id":user_id})
+    # Opening the Users.json file and writing the new user data
+    with open(Path_Users, 'w') as file:
+        json.dump(user_data, file, indent=2)
+
+    # Appending new password data
+    Passwords_data["password"].append({"user_id":user_id,"psw":psw,"trys":4,"account":account})
+    # Opening the Passwords.json file and writing the new user data
+    with open(Path_Passwords, 'w') as file:
+        json.dump(Passwords_data, file, indent=2)
+
+    # Appening new Account data
+    new_bank_data = [{
+        "balance": [0],
+        "transaction": [""],
+        "date": [str(today)],
+        "note": ["Konto skapades"]
+    }]
+    Accounts_data[account] = new_bank_data
+    # Opening the Accounts.json file and writing the new user data
+    with open(Path_Accounts, 'w') as file:
+        json.dump(Accounts_data, file, indent=3)
+    
+    print("Skapar ny användare...")
+    time.sleep(2)
     return
 
 
@@ -288,12 +370,14 @@ def check(email):
     Function to validate email address.
     """
     try:
-        v = validate_email(email)  # Validating email
-        email = v["email"]  # Normalizing email
-        return True
+        # Check that the email address is valid. Turn on check_deliverability
+        emailinfo = validate_email(email, check_deliverability=False)
+        email = emailinfo.normalized
+        return email
     except EmailNotValidError as e:
-        print(str(e))  # Printing error message for invalid email
-        return False  # Returning False indicating the email is not valid
+        print(str(e)) # Printing error message for invalid email
+        time.sleep(2)
+        return ""  # Returning False indicating the email is not valid
 
 
 def Debug():
@@ -301,7 +385,6 @@ def Debug():
     Placeholder function for debugging.
     """
     return
-
 
 start()  # Starting the banking system
 
