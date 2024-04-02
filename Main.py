@@ -173,10 +173,10 @@ def Account_Transaction(account_num):
     Function to perform a transaction.
     """
     # Read the Account file
-    a = open(Path_Accounts, "r", encoding='utf-8')
-    Accounts_data = json.load(a)
-    a.close
+    with open(Path_Accounts, "r", encoding='utf-8') as a: 
+        Accounts_data = json.load(a)  # Loading account data from the JSON file
 
+    # Extracting account details from the loaded data
     for val in Accounts_data[str(account_num)]:
         account_balance = val["balance"]
         account_transaction = val["transaction"]
@@ -184,38 +184,70 @@ def Account_Transaction(account_num):
         account_note = val["note"]
 
     while True:
-        os.system('cls')
+        os.system('cls')  # Clearing the screen
         print("Bankomat \n")
 
-        print("Nuvarande belopp:", account_balance[0], " kr")  # Printing current balance
+        # Printing current balance
+        print("Nuvarande belopp:", account_balance[0], " kr")  
+        
+        # Prompting user to choose a transaction type
         questions = [
-            inquirer.List('transaction', message="Välj interaktion", choices=["Uttag", "Insättning", "Tillbaka"], ),
+            inquirer.List('transaction', message="Välj interaktion", choices=["Uttag", "Insättning", "Kontoöverföring", "Tillbaka"], ),
         ]
         answers = inquirer.prompt(questions)  # Getting user's choice
         print(answers['transaction'])
 
         # Handling user's transaction choice
-        os.system('cls')
+        os.system('cls')  # Clearing the screen
         print("Bankomat \n")
 
-        if answers["transaction"] == 'Tillbaka': break  # Going back to the previous menu
+        if answers["transaction"] == 'Tillbaka': 
+            break  # Going back to the previous menu
 
         try:
             text1 = ("Skriv in " + answers["transaction"] + " beloppet \n")  # Prompting for transaction amount
             text2 = ("Göra en kort anteckning till " + answers["transaction"] + "\n")  # Prompting for a note
-            value = abs(float(input(text1)))  # Getting transaction amount
+            value = -1*abs(float(input(text1)))  # Getting transaction amount and negating it for withdrawals
 
-            if answers["transaction"] == 'Uttag': value = value * -1  # Negating the amount for withdrawals
+            if answers["transaction"] == 'Insättning': 
+                value = value * -1  # Positive the amount for deposit
 
             if account_balance[0] + value >= 0:
+                # If the user wants to do a transaction between accounts. 
+                if answers["transaction"] == "Kontoöverföring":
+                    t_account_num = input("Skriv in kontonummer att skicka till: ")
+                    trigger = False
+                    for val in Accounts_data: # Itterating through Accounts.json 
+                        if (val == t_account_num) and not(val == str(account_num)): trigger = True # Trying to find the inputed account number
+                            
+                    if not(trigger):
+                        print("Kontonummret existerar inte, prova med ett annat.")
+                        time.sleep(2)
+                        break
+                
                 note = input(text2)  # Getting transaction note
+                
                 # Adding the new transaction data to the account
                 account_balance.insert(0, account_balance[0] + value)
                 account_transaction.insert(0, answers["transaction"])
                 account_date.insert(0, str(today))
                 account_note.insert(0, note)
 
+                if trigger: # Check if it is a transaction between accounts
+                    for val in Accounts_data[str(t_account_num)]: # Read the new account
+                        t_account_balance = val["balance"]
+                        t_account_transaction = val["transaction"]
+                        t_account_date = val["date"]
+                        t_account_note = val["note"]
+                    
+                    # Adding the new transaction data to the account
+                    t_account_balance.insert(0, t_account_balance[0] + (-1*value))
+                    t_account_transaction.insert(0, answers["transaction"])
+                    t_account_date.insert(0, str(today))
+                    t_account_note.insert(0, note)
+
                 newData = json.dumps(Accounts_data, indent=4)  # Serializing updated data
+                
                 # Opening the Accounts.json file and writing updated data
                 with open(Path_Accounts, 'w', encoding='utf-8') as file:
                     file.write(newData)  # Writing over the current Accounts.json file with the updated data
@@ -232,7 +264,6 @@ def Account_Transaction(account_num):
             time.sleep(1.5)
 
     return
-
 
 def Account_Balance_History(account_num):
     """
@@ -271,7 +302,7 @@ def Account_Transaction_History(account_num):
     with open(Path_Accounts, "r", encoding='utf-8') as a: Accounts_data = json.load(a)
 
     # Print the information in the desired format
-    print("{0:<20} | {1:<14} | {2:<16} | {3:<30}\n"
+    print("{0:<20} | {1:<18} | {2:<16} | {3:<30}\n"
               .format("Saldo", "Transaktion", "Datum", "Anteckning"))
     # Itterates through the accounts json data, and prints out each element in order.
     for item in range(len(Accounts_data[str(account_num)][0]['balance'])):
@@ -280,7 +311,7 @@ def Account_Transaction_History(account_num):
         date = Accounts_data[str(account_num)][0]['date'][item]
         note = Accounts_data[str(account_num)][0]['note'][item]
         
-        print("{0:<20} | {1:<14} | {2:<16} | {3:<30}"
+        print("{0:<20} | {1:<18} | {2:<16} | {3:<30}"
               .format(balance, transaction, date, note, item))
         
         if item >= 30: # Check if the item is equal to or larger than 30, if so: stop printing
