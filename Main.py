@@ -1,7 +1,6 @@
 import os  # Importing the os module to interact with the operating system
 import time  # Importing the time module for time-related functions
 import json  # Importing the json module for JSON file operations
-import pandas as pd # Importing pandas module to pars data
 import inquirer  # Importing the inquirer module for interactive user prompts
 from datetime import date  # Importing the date class from the datetime module
 from getpass import getpass # Importing the hidden password module for user input
