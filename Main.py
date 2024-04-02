@@ -1,6 +1,7 @@
 import os  # Importing the os module to interact with the operating system
 import time  # Importing the time module for time-related functions
 import json  # Importing the json module for JSON file operations
+import pandas as pd # Importing pandas module to pars data
 import inquirer  # Importing the inquirer module for interactive user prompts
 from datetime import date  # Importing the date class from the datetime module
 from getpass import getpass # Importing the hidden password module for user input
@@ -144,10 +145,10 @@ def Account(account_num):
     """
     Function to manage user's account.
     """
-    os.system('cls')
-    print("Bankomat \n")
-
     while True:
+        os.system('cls')
+        print("Bankomat \n")
+
         questions = [
             inquirer.List('account',
                           message="Välj interaktion",
@@ -234,33 +235,11 @@ def Account_Transaction(account_num):
 
 def Account_Balance_History(account_num):
     """
-    Function to view balance history.
-    """
-    # Read the pasword file
-    a = open(Path_Accounts, "r", encoding='utf-8')
-    Accounts_data = json.load(a)
-    a.close
-
-    for val in Accounts_data[str(account_num)]:
-        account_balance = val["balance"]
-        account_transaction = val["transaction"]
-        account_date = val["date"]
-        account_note = val["note"]
-
-    while True:
-        break  # Placeholder for balance history functionality
-    return
-
-
-def Account_Transaction_History(account_num):
-    """
     Function to view transaction history.
     """
     # Read the pasword file
-    a = open(Path_Accounts, "r", encoding='utf-8')
-    Accounts_data = json.load(a)
-    a.close
-
+    with open(Path_Accounts, "r", encoding='utf-8') as a: Accounts_data = json.load(a)
+    
     for val in Accounts_data[str(account_num)]:
         account_balance = val["balance"]
         account_transaction = val["transaction"]
@@ -269,6 +248,32 @@ def Account_Transaction_History(account_num):
 
     while True:
         break  # Placeholder for transaction history functionality
+    return
+
+def Account_Transaction_History(account_num):
+    """
+    Function to view balance history.
+    """
+    # Read the pasword file
+    with open(Path_Accounts, "r", encoding='utf-8') as a: Accounts_data = json.load(a)
+
+    # Print the information in the desired format
+    print("{0:<20} | {1:<14} | {2:<16} | {3:<30}\n"
+              .format("Saldo", "Transaktion", "Datum", "Anteckning"))
+    # Itterates through the accounts json data, and prints out each element in order.
+    for item in range(len(Accounts_data[str(account_num)][0]['balance'])):
+        balance = Accounts_data[str(account_num)][0]['balance'][item]
+        transaction = Accounts_data[str(account_num)][0]['transaction'][item]
+        date = Accounts_data[str(account_num)][0]['date'][item]
+        note = Accounts_data[str(account_num)][0]['note'][item]
+        
+        print("{0:<20} | {1:<14} | {2:<16} | {3:<30}"
+              .format(balance, transaction, date, note, item))
+        
+        if item >= 30: # Check if the item is equal to or larger than 30, if so: stop printing
+            print("Kunde endast ladda in de senaste 30 transaktionerna")
+            break
+    input("\nTryck enter för att gå tillbaka...")
     return
 
 
