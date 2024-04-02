@@ -1,134 +1,138 @@
 {
-   "111002": [
-      {
-         "balance": [
-            334.8585,
-            284.8585,
-            484.8585,
-            488.0,
-            518.0,
-            18.0,
-            63.0,
-            54.0,
-            50.0,
-            70.0,
-            30.0,
-            15.0,
-            19.0,
-            22,
-            33,
-            66,
-            0,
-            11
-         ],
-         "transaction": [
-            "Ins\u00e4ttning",
-            "Uttag",
-            "Uttag",
-            "Uttag",
-            "Ins\u00e4ttning",
-            "Uttag",
-            "Ins\u00e4ttning",
-            "Ins\u00e4ttning",
-            "Uttag",
-            "Uttag",
-            "Uttag",
-            "Uttag",
-            "Uttag",
-            "Uttag",
-            "Ins\u00e4ttning",
-            "Ins\u00e4ttning",
-            "Uttag",
-            "Ins\u00e4ttning"
-         ],
-         "date": [
-            "2024-03-27",
-            "2024-03-27",
-            "2024-03-27",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-03-25",
-            "2024-01-01",
-            "2023-06-06",
-            "2023-03-30",
-            "2022-09-17",
-            "2022-03-06"
-         ],
-         "note": [
-            "hitte fynd",
-            "Swish",
-            "PI",
-            "swish",
-            "Fick en 500 av s\u00e5gon snubbe",
-            "Lunch",
-            "Fynd",
-            "Swish",
-            "k\u00f6p av leksak",
-            "present",
-            "kalas",
-            "k",
-            "k",
-            "Swish",
-            "Aktivitet",
-            "L\u00f6n",
-            "F\u00f6delsedag",
-            "--"
-         ]
-      }
-   ],
-   "333333": [
-      {
-         "balance": [
-            5,
-            300,
-            650,
-            32,
-            9901
-         ],
-         "transaction": [
-            "Uttag",
-            "Ins\u00e4ttning",
-            "Ins\u00e4ttning",
-            "Uttag",
-            "Ins\u00e4ttning"
-         ],
-         "date": [
-            "2024-01-23",
-            "2023-10-31",
-            "2023-07-25",
-            "2023-06-25",
-            "2022-06-06"
-         ],
-         "note": [
-            "F\u00f6delsedag",
-            "Aktivitet",
-            "L\u00f6n",
-            "L\u00f6n",
-            "Aktivitet"
-         ]
-      }
-   ],
-   "426983": [
-      {
-         "balance": [
-            0
-         ],
-         "transaction": [
-            ""
-         ],
-         "date": [
-            "2024-04-02"
-         ],
-         "note": [
-            "Konto skapades"
-         ]
-      }
-   ]
+    "111002": [
+        {
+            "balance": [
+                634.8585,
+                334.8585,
+                284.8585,
+                484.8585,
+                488.0,
+                518.0,
+                18.0,
+                63.0,
+                54.0,
+                50.0,
+                70.0,
+                30.0,
+                15.0,
+                19.0,
+                22,
+                33,
+                66,
+                0,
+                11
+            ],
+            "transaction": [
+                "Ins\u00e4ttning",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Uttag",
+                "Uttag",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Ins\u00e4ttning",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Uttag",
+                "Uttag",
+                "Uttag",
+                "Uttag",
+                "Uttag",
+                "Ins\u00e4ttning",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Ins\u00e4ttning"
+            ],
+            "date": [
+                "2024-04-02",
+                "2024-03-27",
+                "2024-03-27",
+                "2024-03-27",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-03-25",
+                "2024-01-01",
+                "2023-06-06",
+                "2023-03-30",
+                "2022-09-17",
+                "2022-03-06"
+            ],
+            "note": [
+                "Kalas",
+                "hitte fynd",
+                "Swish",
+                "PI",
+                "swish",
+                "Fick en 500 av s\u00e5gon snubbe",
+                "Lunch",
+                "Fynd",
+                "Swish",
+                "k\u00f6p av leksak",
+                "present",
+                "kalas",
+                "k",
+                "k",
+                "Swish",
+                "Aktivitet",
+                "L\u00f6n",
+                "F\u00f6delsedag",
+                "--"
+            ]
+        }
+    ],
+    "333333": [
+        {
+            "balance": [
+                5,
+                300,
+                650,
+                32,
+                9901
+            ],
+            "transaction": [
+                "Uttag",
+                "Ins\u00e4ttning",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Ins\u00e4ttning"
+            ],
+            "date": [
+                "2024-01-23",
+                "2023-10-31",
+                "2023-07-25",
+                "2023-06-25",
+                "2022-06-06"
+            ],
+            "note": [
+                "F\u00f6delsedag",
+                "Aktivitet",
+                "L\u00f6n",
+                "L\u00f6n",
+                "Aktivitet"
+            ]
+        }
+    ],
+    "426983": [
+        {
+            "balance": [
+                0
+            ],
+            "transaction": [
+                ""
+            ],
+            "date": [
+                "2024-04-02"
+            ],
+            "note": [
+                "Konto skapades"
+            ]
+        }
+    ]
 }
