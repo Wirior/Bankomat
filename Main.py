@@ -5,6 +5,7 @@ import inquirer  # Importing the inquirer module for interactive user prompts
 from datetime import date  # Importing the date class from the datetime module
 from getpass import getpass # Importing the hidden password module for user input
 import random # Importing random function for slump actions
+import matplotlib.pyplot as plt # importing pylot module to plot grapths
 
 from email_validator import validate_email, EmailNotValidError  # Importing email validation functions
 
@@ -148,6 +149,7 @@ def Account(account_num):
         os.system('cls')
         print("Bankomat \n")
 
+        print(f"Inloggad på: {account_num}")
         questions = [
             inquirer.List('account',
                           message="Välj interaktion",
@@ -238,15 +240,27 @@ def Account_Balance_History(account_num):
     """
     # Read the pasword file
     with open(Path_Accounts, "r", encoding='utf-8') as a: Accounts_data = json.load(a)
-    
+    # Itterate though the account and save the balance 
     for val in Accounts_data[str(account_num)]:
         account_balance = val["balance"]
-        account_transaction = val["transaction"]
         account_date = val["date"]
-        account_note = val["note"]
+       
+    balance = []
+    for index in reversed(account_balance): balance.append(index) # Reversed list of the dates
+    dates = []
+    for index in reversed(account_date): dates.append(index) # Reversed list of the dates
 
-    while True:
-        break  # Placeholder for transaction history functionality
+    title = {'family':'sans-serif','color':'black','size':18} # Set the title with font, colour and size
+    plt.locator_params(axis='x', nbins=4) # Number of ticks for the x-axis
+    plt.xticks(rotation=30, ha="right") # Rotate the lable for the x-axis ticks by 30 degree
+
+    plt.title(f"{str(account_num)}: Saldo historik",loc= 'left', fontdict= title) # Title
+    plt.xlabel("Datum") # X-lable
+    plt.ylabel("Belopp [sek]") # Y-lable
+
+    plt.plot(dates, balance)
+    plt.show()
+
     return
 
 def Account_Transaction_History(account_num):
