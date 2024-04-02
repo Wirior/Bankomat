@@ -1,12 +1,16 @@
 {
-    "master" : [
-      {
-        "user": "notme",
-        "user_id": 1234567
-      },
-      {
-       "user": "erikzi@student.chalmers.se",
-       "user_id": 56789
-      }
-    ]
-  }
+  "master": [
+    {
+      "user": "notme",
+      "user_id": 1234567
+    },
+    {
+      "user": "erikzi@student.chalmers.se",
+      "user_id": 56789
+    },
+    {
+      "user": "hej@gmail.com",
+      "user_id": 394922
+    }
+  ]
+}
