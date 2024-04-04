@@ -213,10 +213,10 @@ def Account_Transaction(account_num):
                 value = value * -1  # Positive the amount for deposit
 
             if account_balance[0] + value >= 0:
+                trigger = False
                 # If the user wants to do a transaction between accounts. 
                 if answers["transaction"] == "Kontoöverföring":
                     t_account_num = input("Skriv in kontonummer att skicka till: ")
-                    trigger = False
                     for val in Accounts_data: # Itterating through Accounts.json 
                         if (val == t_account_num) and not(val == str(account_num)): trigger = True # Trying to find the inputed account number
                             
@@ -289,6 +289,7 @@ def Account_Balance_History(account_num):
     plt.xlabel("Datum") # X-lable
     plt.ylabel("Belopp [sek]") # Y-lable
 
+    print("Stäng ner grafens fönstret för att fortsätta...")
     plt.plot(dates, balance)
     plt.show()
 
@@ -298,6 +299,10 @@ def Account_Transaction_History(account_num):
     """
     Function to view balance history.
     """
+    os.system('cls')  # Clearing the screen
+    print("Bankomat \n")
+    
+    print(f"Inloggad på: {account_num}")
     # Read the pasword file
     with open(Path_Accounts, "r", encoding='utf-8') as a: Accounts_data = json.load(a)
 
@@ -435,5 +440,6 @@ def Debug():
     """
     return
 
-start()  # Starting the banking system
+if __name__ == '__main__': # Starts the application
+    start()  # Starting the banking system
 
