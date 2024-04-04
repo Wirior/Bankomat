@@ -134,18 +134,22 @@
     "426983": [
         {
             "balance": [
+                250.0,
                 200.0,
                 0
             ],
             "transaction": [
+                "Ins\u00e4ttning",
                 "Konto\u00f6verf\u00f6ring",
                 ""
             ],
             "date": [
+                "2024-04-03",
                 "2024-04-02",
                 "2024-04-02"
             ],
             "note": [
+                "swish",
                 "Bilar",
                 "Konto skapades"
             ]
