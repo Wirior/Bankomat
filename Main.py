@@ -91,7 +91,7 @@ def incorrect_psw(user_id:str):
         if user_id == val["user_id"]:
             trys = val["trys"]  # Getting number of tries
             break
-    Passwords_data["password"][count]["trys"] = trys+1  # Updating the number of tries in the data
+    Passwords_data["password"][count]["trys"] = trys-1  # Updating the number of tries in the data
     write_file(Path_Passwords,Passwords_data,4)
     return True
 
