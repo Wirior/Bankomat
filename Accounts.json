@@ -206,5 +206,53 @@
             "Konto skapades"
          ]
       }
+   ],
+   "622692": [
+      {
+         "balance": [
+            0
+         ],
+         "transaction": [
+            ""
+         ],
+         "date": [
+            "2024-04-05"
+         ],
+         "note": [
+            "Konto skapades"
+         ]
+      }
+   ],
+   "183924": [
+      {
+         "balance": [
+            0
+         ],
+         "transaction": [
+            ""
+         ],
+         "date": [
+            "2024-04-05"
+         ],
+         "note": [
+            "Konto skapades"
+         ]
+      }
+   ],
+   "719450": [
+      {
+         "balance": [
+            0
+         ],
+         "transaction": [
+            ""
+         ],
+         "date": [
+            "2024-04-05"
+         ],
+         "note": [
+            "Konto skapades"
+         ]
+      }
    ]
 }

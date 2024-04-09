@@ -1,13 +1,19 @@
-"""
-
+text_title = """
 ______                _                              _   
 | ___ \              | |                            | |  
 | |_/ /  __ _  _ __  | | __  ___   _ __ ___    __ _ | |_ 
 | ___ \ / _` || '_ \ | |/ / / _ \ | '_ ` _ \  / _` || __|
 | |_/ /| (_| || | | ||   < | (_) || | | | | || (_| || |_ 
-\____/  \__,_||_| |_||_|\_\ \___/ |_| |_| |_| \__,_| \__|    V:1.0
-                                                         
-                                                         
+\____/  \__,_||_| |_||_|\_\ \___/ |_| |_| |_| \__,_| \__|    V:1.0                                                         
+"""
+
+text_admin = """
+                 _               _         
+     /\         | |             (_)        
+    /  \      __| |  _ __ ___    _   _ __  
+   / /\ \    / _` | | '_ ` _ \  | | | '_ \ 
+  / ____ \  | (_| | | | | | | | | | | | | |
+ /_/    \_\  \__,_| |_| |_| |_| |_| |_| |_|
 """
 
 import os  # Importing the os module to interact with the operating system
@@ -18,15 +24,17 @@ from datetime import date  # Importing the date class from the datetime module
 from getpass import getpass # Importing the hidden password module for user input
 import random # Importing random function for slump actions
 import matplotlib.pyplot as plt # importing pylot module to plot grapths
+from tkinter import *
+from tkinter import ttk
 
 from email_validator import validate_email, EmailNotValidError  # Importing email validation functions
 
 """
 Remember to replace the file path with your location of the files and replace the \\(backslah) with / 
 """
-Path_Users = "C:/Users/Dell/Documents/Python Scripts/Bankomat/Users.json"  # Path to the users JSON file
-Path_Passwords = "C:/Users/Dell/Documents/Python Scripts/Bankomat/Passwords.json"  # Path to the passwords JSON file
-Path_Accounts = "C:/Users/Dell/Documents/Python Scripts/Bankomat/Accounts.json"  # Path to the accounts JSON file
+Path_Users = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main/Users.json"  # Path to the users JSON file
+Path_Passwords = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main/Passwords.json"  # Path to the passwords JSON file
+Path_Accounts = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main/Accounts.json"  # Path to the accounts JSON file
 
 today = date.today()  # Getting today's date
 
@@ -54,8 +62,8 @@ def check_username(username:str):
     for i in user_data['master']:
         if username == i["user"]:
             user_id = i["user_id"]  # Getting user ID
-            return user_id # Returning user ID
-    return False # Can't find user in Users.json
+            return True, user_id # Returning True if user ID match
+    return False, 0 # Can't find user in Users.json
 
 def check_password(user_id, password:str):
     """Function which takes imports user_id and password and checks if the profile password and password is correct and number of tries left.
@@ -72,15 +80,16 @@ def check_password(user_id, password:str):
             user_psw = val["psw"]  # Getting user's password
             trys = val["trys"]  # Getting number of tries
             break
-    if trys <= 0: return None, "Du har låst ditt konto, kontakta kundtjänst"
+    if trys <= 0: return False, 0
     
     # Check if input password is the same as the stored password
     if password == user_psw:
         account_num = val["account"]  # Getting account number
-        return account_num, 0
+        correct_psw(user_id)
+        return True, account_num
     else:
         incorrect_psw(user_id)
-        return False, f"Fel lösenord, du har {trys-1} försök kvar"
+        return None, trys-1
     
 def incorrect_psw(user_id:str):
     """Function to increment the number of failed log ins a user has done 
@@ -93,7 +102,17 @@ def incorrect_psw(user_id:str):
             break
     Passwords_data["password"][count]["trys"] = trys-1  # Updating the number of tries in the data
     write_file(Path_Passwords,Passwords_data,4)
-    return True
+
+def correct_psw(user_id:str):
+    """Function to reset number of log in attempts upon successful attempt"""
+    
+    Passwords_data = read_file(Path_Passwords)
+    
+    for count, val in enumerate(Passwords_data['password']):
+        if user_id == val['user_id']:
+            break
+    Passwords_data['password'][count]['trys'] = 4
+    write_file(Path_Passwords,Passwords_data,4)
 
 def transaction(account_num:str, type:str, amount, note:str):
     """Function to write a transaction between accounts.
@@ -180,13 +199,12 @@ def new_account(username:str,password:str):
     users_data = read_file(Path_Users)
     passwords_data = read_file(Path_Passwords)
     accounts_data = read_file(Path_Accounts)
-
-    email,enve = validate_username(username) # Validate email adress
-    if not(email):
-        return False, enve # returns the EmailNotValidError
+ 
+    if validate_username(username) == False: # Validate email adress
+        return 1
     
-    if check_username(username): # Check if username already exists
-        return False, "The submitted emailadress already exists"
+    if check_username(username) == True: # Check if username already exists
+        return 2
     
     user_id = create_id(users_data["master"],"user_id") # Create a unique 6 digit user_id 
     account_num = create_id(passwords_data['password'],"account") # Create a unique 6 digit account_num 
@@ -207,17 +225,17 @@ def new_account(username:str,password:str):
     }]
     accounts_data[account_num] = new_bank_data
     write_file(filepath= Path_Accounts, data= accounts_data, indent= 3)
-    return True, 0
+    return 0
 
 def validate_username(email:str):
     """Function to validate email address.
     """
     try:
         # Check that the email address is valid. Turn on check_deliverability
-        emailinfo = validate_email(email, check_deliverability=False)
-        return emailinfo.normalized, 0
-    except EmailNotValidError as e:
-        return False,str(e)  # Returning False indicating the email is not valid
+        validate_email(email, check_deliverability=False)
+        return True
+    except:
+        return False  # Returning False indicating the email is not valid
 
 def create_id(data,id):
     """Function to create a unique 6 digit long number for account numbers or user id:s
@@ -453,6 +471,233 @@ def New_user():
         time.sleep
     return
 
-if __name__ == '__main__': # Starts the application
-    start()  # Starting the banking system
+class Application(Tk): # Creates main application that the UI is located in
+    def __init__(self, *args, **kwargs):
+        Tk.__init__(self, *args, **kwargs)
 
+        self.title('Bankomat')
+        self.minsize(675, 350)
+        self.maxsize(675, 350)
+        self.logged_user = None
+        
+        container = Frame(self)
+        container.pack(side='top', fill='both', expand=True)
+        container.grid_rowconfigure(0, weight=1)
+        container.grid_columnconfigure(0, weight=1)
+        
+        self.frames = {}
+        for F in (Menu, Login, Create_Account, Admin, Logged_In):
+            page_name = F.__name__
+            frame = F(parent=container, controller=self)
+            self.frames[page_name] = frame
+
+            frame.grid(row=0, column=0, sticky='nsew')
+        
+        self.show_frame('Menu')
+        
+    def show_frame(self, page_name):
+        frame = self.frames[page_name]
+        frame.tkraise()
+        
+
+class Menu(Frame):
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        label_title = Label(self, text=text_title, font=('Courier', 8), justify=LEFT)
+        button_login = Button(self, text='Logga In',
+                              command= lambda: controller.show_frame('Login'))
+        button_create = Button(self, text='Skapa Konto',
+                               command= lambda: controller.show_frame('Create_Account'))
+        button_admin = Button(self, text='Admin',
+                              command= lambda: controller.show_frame('Admin'))
+        
+        label_title.grid(column=0, row=0, sticky='n')
+        button_login.grid(column=0, row=1, padx=10, sticky='w')
+        button_create.grid(column=0, row=2, padx=10, pady=5, sticky='w')
+        button_admin.grid(column=0, row=3, padx=10, sticky='w')
+        
+class Login(Frame):
+    
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        self.logged_user = self.controller.logged_user
+        label_title = Label(self, text='Logga In')
+        label_user = Label(self, text='Användarnamn:')
+        label_pin = Label(self, text='Pin-kod:')
+        self.label_error_exist = Label(self, text='Error: Inkorrekt Användarnamn', fg='red')
+        self.label_error_pin = Label(self, text='', fg='red')
+        self.label_error_locked = Label(self, text='Error: Konto Låst\nInga Försök Återstår', fg='red')
+        self.entry_user = Entry(self, cursor='xterm')
+        self.entry_pin = Entry(self, cursor='xterm', show='*')
+        button_login = Button(self, text='Logga In',
+                              command= lambda: login(self.entry_user.get(), self.entry_pin.get()))
+        button_back = Button(self, text='Gå Tillbaka',
+                             command= lambda: controller.show_frame('Menu'))
+        
+        label_title.grid(column=0, row=0, columnspan=2)
+        label_user.grid(column=0, row=1, sticky='e')
+        label_pin.grid(column=0, row=2, pady=5, sticky='e')
+        self.entry_user.grid(column=1, row=1, padx=5, sticky='w')
+        self.entry_pin.grid(column=1, row=2, padx=5, pady=5, sticky='w')
+        button_login.grid(column=0, row=5, pady=10, sticky='n', columnspan=2)
+        button_back.grid(column=0, row=6, pady=10, sticky='s', columnspan=2)
+        
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(0, weight=1)
+        self.rowconfigure(5, weight=1)
+        self.rowconfigure(6, weight=1)
+        
+        def login(username, pin):
+            self.clearerror()
+            user = check_username(username)
+            if user[0] == True:
+                trys = check_password(user[1], pin)
+                if trys[0] == True:
+                    self.controller.logged_user = trys[1]
+                    print(trys[1])
+                    controller.show_frame('Logged_In')
+                
+                elif trys[0] == False:
+                    self.label_error_locked.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
+                
+                elif trys[0] == None:
+                    self.label_error_pin.config(text=('Error: Inkorrekt Pin-kod\n' + str(trys[1]) + ' Försök Återstår'))
+                    self.label_error_pin.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
+                    
+            else:
+                self.label_error_exist.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
+        
+    def clearframe(self):
+        self.entry_user.delete(0, END)
+        self.entry_pin.delete(0, END)
+    
+    def clearerror(self):
+        self.label_error_exist.grid_forget()
+        self.label_error_pin.grid_forget()
+        self.label_error_locked.grid_forget()
+    
+    def tkraise(self, aboveThis=None):
+        self.clearframe()
+        self.clearerror()
+        super().tkraise(aboveThis)
+                
+class Create_Account(Frame):
+    
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        label_title = Label(self, text='Skapa Konto')
+        label_user = Label(self, text='Användarnamn:')
+        label_pin = Label(self, text='Pin-kod:')
+        label_pin2 = Label(self, text='Upprepa Pin:')
+        self.label_error_exists = Label(self, text='Error: Konto Finns Redan', fg='red')
+        self.label_error_match = Label(self, text='Error: Pin-koder Matchar Inte', fg='red')
+        self.label_error_invalid = Label(self, text='Error: Ogiltigt Användarnamn\nAnvänd en Email-address', fg='red')
+        self.label_success = Label(self, text='Konto Skapades', fg='lime green')
+        self.entry_user = Entry(self, cursor='xterm')
+        self.entry_pin = Entry(self, cursor='xterm')
+        self.entry_pin2 = Entry(self, cursor='xterm')
+        button_create = Button(self, text='Skapa Konto',
+                               command= lambda: create(self.entry_user.get(), self.entry_pin.get(), self.entry_pin2.get()))
+        button_back = Button(self, text='Gå Tillbaka',
+                             command= lambda: controller.show_frame('Menu'))
+               
+        label_title.grid(column=0, row=0, columnspan=2)
+        label_user.grid(column=0, row=1, sticky='e')
+        label_pin.grid(column=0, row=2, pady=5, sticky='e')
+        label_pin2.grid(column=0, row=3, sticky='e')
+        self.entry_user.grid(column=1, row=1, padx=5, sticky='w')
+        self.entry_pin.grid(column=1, row=2, padx=5, pady=5, sticky='w')
+        self.entry_pin2.grid(column=1, row=3, padx=5, sticky='w')
+        button_create.grid(column=0, row=5, pady=10, sticky='n', columnspan=2)
+        button_back.grid(column=0, row=6, pady=10, sticky='s', columnspan=2)
+                
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(6, weight=1)
+        self.rowconfigure(5, weight=1)
+        self.rowconfigure(0, weight=1)
+        
+        def create(username, pin, pin2):            
+            self.clearerror()
+            if pin != pin2:
+                self.label_error_match.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
+                return
+            
+            if new_account(username, pin) == 0:
+                self.label_success.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
+           
+            elif new_account(username, pin) == 1:
+                self.label_error_invalid.grid(column=0, row=5, sticky='s', pady=10, columnspan=2) 
+            
+            elif new_account(username, pin) == 2:
+                self.label_error_exists.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
+                            
+    def clearentry(self):
+        self.entry_user.delete(0, END)
+        self.entry_pin.delete(0, END)
+        self.entry_pin2.delete(0, END)
+        
+    def clearerror(self):
+        self.label_error_exists.grid_forget()
+        self.label_error_match.grid_forget()
+        self.label_error_invalid.grid_forget()
+        self.label_success.grid_forget()
+    
+    def tkraise(self, aboveThis=None):
+        self.clearentry()
+        self.clearerror()
+        super().tkraise(aboveThis)
+        
+class Logged_In(Frame):
+    
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        self.logged_user = self.controller.logged_user
+        
+class Admin(Frame):
+    
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        label_title = Label(self, text=text_admin, font=('Courier', 8), justify=LEFT)
+        self.entry_user = Entry(self, cursor='xterm')
+        button_reset_trys = Button(self, text='Återställ Försök',
+                                   command= lambda: reset(self.entry_user.get()))
+        button_back = Button(self, text='Gå Tillbaka',
+                             command= lambda: controller.show_frame('Menu'))
+        
+        label_title.grid(column=0, row=0, sticky='n', columnspan=2)
+        self.entry_user.grid(column=0, row=1, sticky='e', padx=10)
+        button_reset_trys.grid(column=1, row=1, sticky='w')
+        button_back.grid(column=0, row=6, pady=10, sticky='s', columnspan=2)
+        
+        self.columnconfigure(0, weight=1)
+        self.columnconfigure(1, weight=1)
+        self.rowconfigure(6, weight=1)
+        
+        def reset(username):
+            id = check_username(username)
+            if id[0] == True:
+                print('Attempts Reset')
+                correct_psw(id[1])
+            else:
+                print('Account Not Found')    
+                    
+    def clearframe(self):
+        self.entry_user.delete(0, END)
+        
+    def tkraise(self, aboveThis=None):
+        self.clearframe()
+        super().tkraise(aboveThis)
+
+
+
+
+if __name__ == '__main__': # Starts the application
+    app = Application()
+    app.mainloop()
