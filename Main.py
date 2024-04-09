@@ -57,13 +57,13 @@ def check_username(username:str):
             return user_id # Returning user ID
     return False # Can't find user in Users.json
 
-def check_password(user_id, password:str):
+def check_password(user_id:str, password:str):
     """Function which takes imports user_id and password and checks if the profile password and password is correct and number of tries left.
     - Imports the user id
     - Imports the password submitted by the user
     - Returns None + error str if the accounts number of tries left are 0
     - Returns False + error str if the password is incorrect
-    - Returns Account_num if the account password matches the submitted psw
+    - Returns list of account numbers if the account password matches the submitted psw
     """
     Passwords_data = read_file(Path_Passwords)
     # Reading user specific data from the stored .json file
@@ -76,7 +76,7 @@ def check_password(user_id, password:str):
     
     # Check if input password is the same as the stored password
     if password == user_psw:
-        account_num = val["account"]  # Getting account number
+        account_num = val["account"] # Getting account number
         return account_num, 0
     else:
         incorrect_psw(user_id)
@@ -102,6 +102,10 @@ def transaction(account_num:str, type:str, amount, note:str):
     - Imports a note made by the user
     - Returns False + error message if the balance can't be transferd
     """
+    # Check if it is a savings account
+    if (account_num%2) == 0:
+        return False, "Kan inte göra uttag och insättningar på Sparkonton"
+
     # Get data from json file
     Accounts_data = read_file(Path_Accounts)
     for val in Accounts_data[str(account_num)]:
@@ -128,6 +132,7 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
     """Function to write a transaction too and from your account.
     - Imports the amount to be moved
     - Imports a note made by the user
+    - Returns False + error message if it is an savings account
     - Returns False + error message if the balance can't be transferd
     - Returns True if successfull
     """
@@ -172,15 +177,14 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
     write_file(Path_Accounts, Accounts_data, 4)
     return True, 0
 
-def new_account(username:str,password:str):
+def create_user(username:str,password:str):
     """Function to create a new account, and add all the users data to the .json file
     - Imports the users username
     - Imports the specific password
     """
     users_data = read_file(Path_Users)
     passwords_data = read_file(Path_Passwords)
-    accounts_data = read_file(Path_Accounts)
-
+    
     email,enve = validate_username(username) # Validate email adress
     if not(email):
         return False, enve # returns the EmailNotValidError
@@ -198,15 +202,6 @@ def new_account(username:str,password:str):
     passwords_data["password"].append({"user_id":user_id,"psw":password,"trys":4,"account":account_num})
     write_file(filepath= Path_Passwords, data= passwords_data, indent= 2)
     
-    # Appening new Account data
-    new_bank_data = [{
-        "balance": [0],
-        "transaction": [""],
-        "date": [str(today)],
-        "note": ["Konto skapades"]
-    }]
-    accounts_data[account_num] = new_bank_data
-    write_file(filepath= Path_Accounts, data= accounts_data, indent= 3)
     return True, 0
 
 def validate_username(email:str):
@@ -229,8 +224,6 @@ def create_id(data,id):
         new_id = random.randrange(100000, 999999)  # Generating a random user ID
         trigger = True
         for i in data:
-            print(i)
-            print(new_id, i[id])
             if new_id == i[id]: trigger = False
         if trigger: return new_id
         input("pause")
@@ -288,6 +281,44 @@ def transaction_history(account_num:str): # Den här måste också ändras för 
 
     return
 
+def new_account(user_id:str, account_type:str, currency:str):
+    """Function to add a new account to an existing profile
+    - Imports user id to append the new account number
+    - Imports account type to create (determained by even or odd account number)
+    - Imports specified currency for the account.
+    - Returns the new appended list of the account numbers.
+    """
+    accounts_data = read_file(Path_Accounts)
+    passwords_data = read_file(Path_Passwords)
+
+    # Reading user specific data from the stored .json file
+    for val in passwords_data["password"]:
+        if user_id == val["user_id"]: break
+    
+    if account_type == "Sparkonto":
+        while True: # Creates a even number for savings account
+            account_num = create_id(passwords_data['password'],"account") # Create a unique 6 digit account_num
+            if (account_num % 2) == 0: break
+    elif account_type == "Betalkonto":
+        while True: # Creates a odd number for payment account
+            account_num = create_id(passwords_data['password'],"account") # Create a unique 6 digit account_num
+            if (account_num % 2) == 1: break
+
+    account_list = val["account"].append(account_num)
+    write_file(filepath= Path_Passwords, data= passwords_data, indent= 2)
+
+    # Appening new Account data
+    new_bank_data = [{
+        "currency":[currency],
+        "balance": [0],
+        "transaction": [""],
+        "date": [str(today)],
+        "note": ["Konto skapades"]
+    }]
+    accounts_data[account_num] = new_bank_data
+    write_file(filepath= Path_Accounts, data= accounts_data, indent= 3)
+    
+    return account_list
 
 
 def start():
@@ -343,35 +374,86 @@ def Log_in():
             print("Bankomat \n")
             print("Användarnamn:", username)
             password = getpass("Lösenord: " + u'\U0001f512')
-            account_num, error = check_password(user_id, password)
-            if account_num: break
+            account_list, error = check_password(user_id, password)
+            
+            if error == 0: break
             else:
                 print(error)
                 input("Tryck enter för att fortsätta")
-                if account_num == None: return
+                if account_list == None: return
         
-        if account_num:
-            while True:
+
+        while True:
+            os.system('cls')
+            print("Bankomat \n")
+            
+            print(f"Inloggad som: {username}")
+            questions = [
+                inquirer.List('konto',
+                        message="Logga in som",
+                        choices=['Befintligt konto', 'Nytt konto', 'Logga ut', 'Ta bort konto'],
+                        ),
+                ]
+            answers = inquirer.prompt(questions)  # Getting user's choice
+
+            if answers["konto"] == 'Befintligt konto':
                 os.system('cls')
                 print("Bankomat \n")
-
-                print(f"Inloggad på: {account_num}")
+            
+                print(f"Inloggad som: {username}")
                 questions = [
-                    inquirer.List('account',
-                                message="Välj interaktion",
-                                choices=['Genomför transaktion', 'Saldo historik', 'Transaktions historik', 'Logga ut'],
-                                ),
-                ]
+                            inquirer.List('account_num',
+                                        message="Välj konto",
+                                        choices=account_list,
+                                        ),
+                        ]
                 answers = inquirer.prompt(questions)  # Getting user's choice
+                account_num = answers["account_num"]
+                if account_num:
+                    while True:
+                        os.system('cls')
+                        print("Bankomat \n")
 
-                if answers["account"] == 'Genomför transaktion':
-                    Account_Transaction(account_num)  # Performing a transaction
-                elif answers["account"] == 'Saldo historik':
-                    balance_history(account_num)  # Viewing balance history
-                elif answers["account"] == 'Transaktions historik':
-                    transaction_history(account_num)  # Viewing transaction history
-                elif answers["account"] == 'Logga ut':
-                    break  # Logging out
+                        print(f"Inloggad på: {account_num}")
+                        questions = [
+                            inquirer.List('account',
+                                        message="Välj interaktion",
+                                        choices=['Genomför transaktion', 'Saldo historik', 'Transaktions historik', 'Byt konto'],
+                                        ),
+                        ]
+                        answers = inquirer.prompt(questions)  # Getting user's choice
+
+                        if answers["account"] == 'Genomför transaktion':
+                            Account_Transaction(account_num)  # Performing a transaction
+                        elif answers["account"] == 'Saldo historik':
+                            balance_history(account_num)  # Viewing balance history
+                        elif answers["account"] == 'Transaktions historik':
+                            transaction_history(account_num)  # Viewing transaction history
+                        elif answers["account"] == 'Byt konto':
+                            break  # Swaping account out
+            elif answers["konto"] == 'Nytt konto':
+                os.system('cls')
+                print("Bankomat \n")
+                
+                print(f"Inloggad som: {username}")
+                questions = [
+                inquirer.List('konto_typ',
+                        message="Välj konto typ",
+                        choices=['Sparkonto', 'Betalkonto'],),]
+                konto = inquirer.prompt(questions)  # Getting user's choice
+                questions = [
+                    inquirer.List('konto_valuta',
+                            message="Konto valuta",
+                            choices=['SEK', 'USD', 'EUR', 'DKK', "NOK"],),]
+                konto2 = inquirer.prompt(questions)  # Getting user's choice
+
+                account_list = new_account(user_id,konto["konto_typ"],konto2["konto_valuta"])
+
+            elif answers["konto"] == 'Ta bort konto':
+                # Blank
+                continue
+            elif answers["konto"] == 'Logga ut':
+                break  # Logging out
     return
 
 def Account_Transaction(account_num):
@@ -447,7 +529,7 @@ def New_user():
                 else:
                     print("Lösenorden matchar inte skriv in ditt lösenord igen")
                     time.sleep(2)
-        status, error = new_account(username,password)
+        status, error = create_user(username,password)
         if status: break
         print(error)
         time.sleep
