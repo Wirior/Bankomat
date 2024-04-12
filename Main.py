@@ -217,7 +217,7 @@ def create_user(username:str,password:str):
     
     return 0
 
-def new_account(user_id:str, account_type:str, currency:str):
+def new_account(user_id:str, account_type:str, currency:str, name:str):
     """Function to add a new account to an existing profile
     - Imports user id to append the new account number
     - Imports account type to create (determained by even or odd account number)
@@ -245,6 +245,7 @@ def new_account(user_id:str, account_type:str, currency:str):
 
     # Appening new Account data
     new_bank_data = [{
+        'name':[name],
         "currency":[currency],
         "balance": [0],
         "transaction": [""],
@@ -277,16 +278,19 @@ def get_accounts(user_id:str):
         elif id % 2 == 1:
             type_list.append('Betalkonto')
 
+    name_list = []
     currency_list = []
     balance_list = []
     for val_acc in account_list:        
         for account in accounts_data[str(val_acc)]:
+            name = account['name']
             currency = account['currency']
             balance = account['balance']
+            name_list.append(name)
             currency_list.append(currency)
             balance_list.append(balance[0])
 
-    return account_list, type_list, currency_list, balance_list
+    return name_list, account_list, type_list, currency_list, balance_list
 
 def validate_username(email:str):
     """Function to validate email address.
@@ -562,20 +566,20 @@ class Logged_In(Frame):
         self.logged_username = self.controller.logged_username
         self.logged_userid = self.controller.logged_userid
         self.logged_accountnum = self.controller.logged_accountnum
-        label_loggedtext = Label(self, text='Inloggad som:')
-        self.label_user = Label(self, text='', fg='magenta')
-        button_logout = Button(self, text='Logga ut',
+        frame_info = Frame(self)
+        label_loggedtext = Label(frame_info, text='Inloggad som:')
+        self.label_user = Label(frame_info, text='', fg='magenta')
+        button_logout = Button(frame_info, text='Logga ut',
                                command= lambda: logout())
         button_create = Button(self, text='Skapa Konto',
                                command= lambda: self.create_account())
-        self.entry_create = Entry(self, cursor='xterm')
         
+        frame_info.grid(column=0, row=0, sticky='w', columnspan=5)
         label_loggedtext.grid(column=0, row=0, sticky='w', pady=5)
         button_logout.grid(column=2, row=0, sticky='w')
-        button_create.grid(column=4, row=0, sticky='e')
-        self.entry_create.grid(column=3, row=0, padx=5, sticky='e')
+        button_create.grid(column=5, row=0, sticky='e')
 
-        self.columnconfigure(3, weight=1)
+        self.columnconfigure(4, weight=1)
         self.rowconfigure(10, weight=1)
 
         def logout():
@@ -631,7 +635,7 @@ class Logged_In(Frame):
         create_window.rowconfigure(3, weight=1)
 
         def create():
-            new_account(self.controller.logged_userid, clicked_type.get(), clicked_currency.get())
+            new_account(self.controller.logged_userid, clicked_type.get(), clicked_currency.get(), entry_name.get())
             self.update_accounts()
 
             
@@ -641,37 +645,41 @@ class Logged_In(Frame):
         account_list = get_accounts(self.controller.logged_userid)
 
         self.buttons = []
-        for i, account in enumerate(account_list[0]):
-            button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[0][i]))
+        for i, name in enumerate(account_list[0]):
+            button = Button(self, text=name, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[1][i]))
             button.grid(column=0, row=(1+i), columnspan=4, sticky='w')
             self.buttons.append(button)
-
-        for i, type in enumerate(account_list[1]):
-            button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[0][i]))
+        
+        for i, account in enumerate(account_list[1]):
+            button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[1][i]))
             button.grid(column=1, row=(1+i), columnspan=4, sticky='w')
+            self.buttons.append(button)
+
+        for i, type in enumerate(account_list[2]):
+            button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[1][i]))
+            button.grid(column=2, row=(1+i), columnspan=4, sticky='w')
             self.buttons.append(button)          
 
-        for i, currency in enumerate(account_list[2]):
+        for i, currency in enumerate(account_list[3]):
             button = Button(self, text=currency, relief='solid', borderwidth=1, width=55, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[0][i]))
-            button.grid(column=2, row=(1+i), columnspan=4, sticky='w')
+                            command= lambda i=i: switch_to(account_list[1][i]))
+            button.grid(column=3, row=(1+i), columnspan=4, sticky='w')
             self.buttons.append(button)      
 
-        for i, balance in enumerate(account_list[3]):
+        for i, balance in enumerate(account_list[4]):
             button = Button(self, text=balance, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[0][i]))
-            button.grid(column=3, row=(1+i), columnspan=4, sticky='e')
+                            command= lambda i=i: switch_to(account_list[1][i]))
+            button.grid(column=4, row=(1+i), columnspan=4, sticky='e')
             self.buttons.append(button) 
 
             def switch_to(accountnum):
                 self.controller.logged_accountnum = accountnum
                 self.controller.show_frame('Account')       
 
-    def clear(self):
-        self.entry_create.delete(0, END)
-        
+    def clear(self):        
         try:
             for button in self.buttons:
                 button.grid_forget()
@@ -696,8 +704,8 @@ class Account(Frame):
         self.label = Label(self, text='')
         button_back = Button(self, text='Tillbaka',
                              command= lambda: controller.show_frame('Logged_In'))
-        self.label.pack()
-        button_back.pack()
+        self.label.grid(column=1, row=0)
+        button_back.grid(column=0, row=0, sticky='nw')
 
     def update_account(self):
         self.label.config(text=self.controller.logged_accountnum)
