@@ -102,6 +102,7 @@ def transaction(account_num:str, type:str, amount, note:str):
     - Imports the amount to be moved
     - Imports a note made by the user
     - Returns False + error message if the balance can't be transferd
+    - Returns False + error if your savings go below 0 
     """
     # Check if it is a savings account
     if (account_num%2) == 0:
@@ -119,6 +120,8 @@ def transaction(account_num:str, type:str, amount, note:str):
         return False, "Strängar kan inte matas in"
 
     if type == "Uttag": amount = -1*abs(float(amount)) # Negating amount for withdrawals
+
+    if (account_balance[0] + float(amount)) < 0: return False, "Kan inte göra uttag större än saldot"
 
     # Adding the new transaction data to the account
     account_balance.insert(0, account_balance[0] + float(amount))
@@ -145,16 +148,16 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
         account_date = val["date"]
         account_note = val["note"]
     
-    if isinstance(amount, (int, float)):  # pass tuple
+    if not isinstance(amount, (int, float)):  # pass tuple
         return False, "Strängar kan inte matas in"
 
     # Trying to find the inputed account number
     trigger = True
-    for val in Accounts_data: # Itterating through Accounts.json 
+    for val in Accounts_data: # Itterating through Accounts.json
         if val == transfer_num and (val != str(account_num)):
             trigger = False
-            break  
-    if trigger: False, "Kontonumret fanns inte att föra över till"
+            break 
+    if trigger: return False, "Kontonumret fanns inte att föra över till"
 
     # Itterating through the Transfer Accounts data
     for val in Accounts_data[str(transfer_num)]: # Read the transfer account
@@ -201,14 +204,13 @@ def create_user(username:str,password:str):
     if check_username(username): # Check if username already exists
         return False, "The submitted emailadress already exists"
     
-    user_id = create_id(users_data["master"],"user_id") # Create a unique 6 digit user_id 
-    account_num = create_id(passwords_data['password'],"account") # Create a unique 6 digit account_num 
+    user_id = create_id(users_data["master"],"user_id") # Create a unique 6 digit user_id  
 
     # Writing over the existing files with the new users data
     users_data["master"].append({"user":username,"user_id":user_id})
     write_file(filepath= Path_Users, data= users_data, indent= 2)
     
-    passwords_data["password"].append({"user_id":user_id,"psw":password,"trys":4,"account":account_num})
+    passwords_data["password"].append({"user_id":user_id,"psw":password,"trys":4,"account":[]})
     write_file(filepath= Path_Passwords, data= passwords_data, indent= 2)
     
     return True, 0
@@ -235,7 +237,6 @@ def create_id(data,id):
         for i in data:
             if new_id == i[id]: trigger = False
         if trigger: return new_id
-        input("pause")
 
 def balance_history(account_num:str): # Det finns något sätt att embed:a pyplot i Tkinter appen
     """Function to plot the balance hotory of a specif account number
@@ -274,14 +275,14 @@ def transaction_history(account_num:str): # Den här måste också ändras för 
     print("{0:<20} | {1:<18} | {2:<16} | {3:<30}\n"
               .format("Saldo", "Transaktion", "Datum", "Anteckning"))
     # Itterates through the accounts json data, and prints out each element in order.
-    for item in range(len(accounts_data[str(account_num)][0]['balance'])):
-        balance = accounts_data[str(account_num)][0]['balance'][item]
+    for item in range(len(accounts_data[str(account_num)][0]['balance'])-1):
+        balance = accounts_data[str(account_num)][0]['balance'][item] - accounts_data[str(account_num)][0]['balance'][item+1]
         transaction = accounts_data[str(account_num)][0]['transaction'][item]
         date = accounts_data[str(account_num)][0]['date'][item]
         note = accounts_data[str(account_num)][0]['note'][item]
         
         print("{0:<20} | {1:<18} | {2:<16} | {3:<30}"
-              .format(balance, transaction, date, note, item))
+              .format(round(balance,2), transaction, date, note, item))
         
         if item >= 30: # Check if the item is equal to or larger than 30, if so: stop printing
             print("Kunde endast ladda in de senaste 30 transaktionerna")
@@ -334,8 +335,8 @@ def delete_account(account_num:str, password:str):
     """Function to safly dispose of any unwanted accounts
     - Imports account number to find account
     - Imports password to verify the deletion
-    - Returns False + error message if incorrect password or balance != 0
-    - Returns True + 0 if successfull
+    - Returns account_list + error message if incorrect password or balance != 0
+    - Returns account_list + 0 if successfull
     """
     passwords_data = read_file(Path_Passwords)
     accounts_data = read_file(Path_Accounts)
@@ -344,12 +345,12 @@ def delete_account(account_num:str, password:str):
         account_list = val["account"]
         if account_num in val["account"]: break
     
-    if not (val["psw"] == password): return False , "Fel lösenord, kontot var inte borttaget"
+    if not (val["psw"] == password): return account_list , "Fel lösenord, kontot var inte borttaget"
 
     # Get data from json
     for val in accounts_data[str(account_num)]:
         account_balance = val["balance"]
-    if not (account_balance[0] == 0): return False , "Kontot får inte inneha något belopp, töm kontor först eller betala av skulden"
+    if not (account_balance[0] == 0): return account_list , "Kontot får inte inneha något belopp, töm kontor först eller betala av skulden"
 
     account_list.remove(account_num) # Remove account number from password.json file
     accounts_data.pop(str(account_num)) # Remove the whole account from accounts.json
@@ -376,6 +377,35 @@ def check_days_passed(date_str: str, days_passed:int):
     else:
         return False
     
+def interest():
+    """Function to calculate the intrest on an account if it is the first day of the month.
+    Updates the .json file for all savings accounts with their given interest. 
+    """
+    interest_rate = random.uniform(1.00125,1.0055) # randomize the intrest rate
+    # Check if it is the first of the month to run the rest of the intrest function  
+    if not (today.day == 1): return
+
+    accounts_data = read_file(Path_Accounts)
+    # Get data from json
+    for account_num in accounts_data:
+        if (int(account_num) % 2) == 0:
+            # Read all the data from the account
+            for val in accounts_data[str(account_num)]:
+                account_balance = val["balance"]
+                account_transaction = val["transaction"]
+                account_date = val["date"]
+                account_note = val["note"]
+            # Calculate the intrest for the account
+            new_balance = account_balance[0] * interest_rate
+
+            # Adding the new transaction data to the account
+            account_balance.insert(0, new_balance)
+            account_transaction.insert(0, "Månads ränta")
+            account_date.insert(0, str(today))
+            account_note.insert(0, f"Måndasräntan låg på {round(interest_rate,4)}% ")
+    # Writing to file when all savings accounts have been added
+    write_file(Path_Accounts, accounts_data, 4)  
+    return
 
 
 
@@ -456,7 +486,8 @@ def Log_in():
                 print("Bankomat \n")
             
                 print(f"Inloggad som: {username}")
-                questions = [inquirer.List('account_num', message="Välj konto", choices=account_list, ), ] # Select waht account you whant to log in to
+                if not account_list: continue
+                questions = [inquirer.List('account_num', message="Välj konto", choices=account_list, ), ] # Select what account you whant to log in to
                 answers = inquirer.prompt(questions)  # Getting user's choice
                 account_num = answers["account_num"]
                 if account_num:
@@ -492,6 +523,7 @@ def Log_in():
                 account_list = new_account(user_id,konto["konto_typ"],konto2["konto_valuta"]) # Create a new account
 
             elif answers["konto"] == 'Ta bort konto':
+                if not account_list: continue
                 os.system('cls')
                 print("Bankomat \n")
 
@@ -523,7 +555,7 @@ def Account_Transaction(account_num):
         print("Bankomat \n")
 
         # Printing current balance
-        print("Nuvarande belopp:", account_balance[0], " kr")  
+        print("Nuvarande belopp:", round(account_balance[0],2), " kr")  
         
         # Prompting user to choose a transaction type
         questions = [ inquirer.List('transaction', message="Välj interaktion", choices=["Uttag", "Insättning", "Kontoöverföring", "Tillbaka"], ), ]
@@ -586,5 +618,5 @@ def New_user():
     return
 
 if __name__ == '__main__': # Starts the application
+    interest() # If it is the first month calculate the given intrest for all accounts
     start()  # Starting the banking system
-

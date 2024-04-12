@@ -3,6 +3,8 @@
         {
             "currency": "SEK",
             "balance": [
+                68.40881747838723,
+                68.0985981657245,
                 34.0,
                 334.0,
                 534.0,
@@ -32,6 +34,8 @@
                 11
             ],
             "transaction": [
+                "M\u00e5nads r\u00e4nta",
+                "M\u00e5nads r\u00e4nta",
                 "Konto\u00f6verf\u00f6ring",
                 "Konto\u00f6verf\u00f6ring",
                 "Ins\u00e4ttning",
@@ -61,6 +65,8 @@
                 "Ins\u00e4ttning"
             ],
             "date": [
+                "2024-04-12",
+                "2024-04-12",
                 "2024-04-09",
                 "2024-04-05",
                 "2024-04-05",
@@ -90,6 +96,8 @@
                 "2022-03-06"
             ],
             "note": [
+                "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.004555443445514% ",
+                "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.0028999460507204% ",
                 "arbete",
                 "skuld",
                 "swish",
@@ -203,15 +211,23 @@
         {
             "currency": "SEK",
             "balance": [
+                0.0,
+                0.0,
                 0
             ],
             "transaction": [
+                "M\u00e5nads r\u00e4nta",
+                "M\u00e5nads r\u00e4nta",
                 ""
             ],
             "date": [
+                "2024-04-12",
+                "2024-04-12",
                 "2024-04-05"
             ],
             "note": [
+                "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.004555443445514% ",
+                "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.0028999460507204% ",
                 "Konto skapades"
             ]
         }
@@ -222,19 +238,58 @@
                 "SEK"
             ],
             "balance": [
+                603.6072130445932,
+                600.8699838152161,
                 300.0,
                 0
             ],
             "transaction": [
+                "M\u00e5nads r\u00e4nta",
+                "M\u00e5nads r\u00e4nta",
                 "Konto\u00f6verf\u00f6ring",
                 ""
             ],
             "date": [
+                "2024-04-12",
+                "2024-04-12",
                 "2024-04-09",
                 "2024-04-09"
             ],
             "note": [
+                "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.004555443445514% ",
+                "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.0028999460507204% ",
                 "arbete",
+                "Konto skapades"
+            ]
+        }
+    ],
+    "602489": [
+        {
+            "currency": [
+                "NOK"
+            ],
+            "balance": [
+                33.0,
+                7.0,
+                3.0,
+                0
+            ],
+            "transaction": [
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Uttag",
+                ""
+            ],
+            "date": [
+                "2024-04-12",
+                "2024-04-12",
+                "2024-04-12",
+                "2024-04-12"
+            ],
+            "note": [
+                "fynd",
+                "f",
+                "f",
                 "Konto skapades"
             ]
         }
