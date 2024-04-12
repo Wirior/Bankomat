@@ -1,7 +1,9 @@
 {
    "111002": [
       {
+         "currency": "SEK",
          "balance": [
+            34.0,
             334.0,
             534.0,
             514.0,
@@ -31,6 +33,7 @@
          ],
          "transaction": [
             "Konto\u00f6verf\u00f6ring",
+            "Konto\u00f6verf\u00f6ring",
             "Ins\u00e4ttning",
             "Uttag",
             "Uttag",
@@ -58,6 +61,7 @@
             "Ins\u00e4ttning"
          ],
          "date": [
+            "2024-04-09",
             "2024-04-05",
             "2024-04-05",
             "2024-04-05",
@@ -86,6 +90,7 @@
             "2022-03-06"
          ],
          "note": [
+            "arbete",
             "skuld",
             "swish",
             "klubba",
@@ -117,6 +122,7 @@
    ],
    "333333": [
       {
+         "currency": "SEK",
          "balance": [
             205.0,
             5,
@@ -153,6 +159,7 @@
    ],
    "426983": [
       {
+         "currency": "SEK",
          "balance": [
             250.0,
             200.0,
@@ -177,6 +184,7 @@
    ],
    "232195": [
       {
+         "currency": "SEK",
          "balance": [
             0
          ],
@@ -193,6 +201,7 @@
    ],
    "343626": [
       {
+         "currency": "SEK",
          "balance": [
             0
          ],
@@ -207,8 +216,34 @@
          ]
       }
    ],
-   "622692": [
+   "899442": [
       {
+         "currency": [
+            "SEK"
+         ],
+         "balance": [
+            300.0,
+            0
+         ],
+         "transaction": [
+            "Konto\u00f6verf\u00f6ring",
+            ""
+         ],
+         "date": [
+            "2024-04-09",
+            "2024-04-09"
+         ],
+         "note": [
+            "arbete",
+            "Konto skapades"
+         ]
+      }
+   ],
+   "670492": [
+      {
+         "currency": [
+            "Sek"
+         ],
          "balance": [
             0
          ],
@@ -216,15 +251,18 @@
             ""
          ],
          "date": [
-            "2024-04-05"
+            "2024-04-12"
          ],
          "note": [
             "Konto skapades"
          ]
       }
    ],
-   "183924": [
+   "298942": [
       {
+         "currency": [
+            "Sek"
+         ],
          "balance": [
             0
          ],
@@ -232,15 +270,18 @@
             ""
          ],
          "date": [
-            "2024-04-05"
+            "2024-04-12"
          ],
          "note": [
             "Konto skapades"
          ]
       }
    ],
-   "719450": [
+   "567999": [
       {
+         "currency": [
+            "Eur"
+         ],
          "balance": [
             0
          ],
@@ -248,7 +289,83 @@
             ""
          ],
          "date": [
-            "2024-04-05"
+            "2024-04-12"
+         ],
+         "note": [
+            "Konto skapades"
+         ]
+      }
+   ],
+   "471423": [
+      {
+         "currency": [
+            "Sek"
+         ],
+         "balance": [
+            0
+         ],
+         "transaction": [
+            ""
+         ],
+         "date": [
+            "2024-04-12"
+         ],
+         "note": [
+            "Konto skapades"
+         ]
+      }
+   ],
+   "454549": [
+      {
+         "currency": [
+            "Eur"
+         ],
+         "balance": [
+            0
+         ],
+         "transaction": [
+            ""
+         ],
+         "date": [
+            "2024-04-12"
+         ],
+         "note": [
+            "Konto skapades"
+         ]
+      }
+   ],
+   "452692": [
+      {
+         "currency": [
+            "EUR"
+         ],
+         "balance": [
+            0
+         ],
+         "transaction": [
+            ""
+         ],
+         "date": [
+            "2024-04-12"
+         ],
+         "note": [
+            "Konto skapades"
+         ]
+      }
+   ],
+   "229148": [
+      {
+         "currency": [
+            "SEK"
+         ],
+         "balance": [
+            0
+         ],
+         "transaction": [
+            ""
+         ],
+         "date": [
+            "2024-04-12"
          ],
          "note": [
             "Konto skapades"

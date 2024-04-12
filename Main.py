@@ -1,4 +1,4 @@
-text_title = """
+text_title = R"""
 ______                _                              _   
 | ___ \              | |                            | |  
 | |_/ /  __ _  _ __  | | __  ___   _ __ ___    __ _ | |_ 
@@ -7,7 +7,7 @@ ______                _                              _
 \____/  \__,_||_| |_||_|\_\ \___/ |_| |_| |_| \__,_| \__|    V:1.0                                                         
 """
 
-text_admin = """
+text_admin = R"""
                  _               _         
      /\         | |             (_)        
     /  \      __| |  _ __ ___    _   _ __  
@@ -16,12 +16,13 @@ text_admin = """
  /_/    \_\  \__,_| |_| |_| |_| |_| |_| |_|
 """
 
+# from getpass import getpass # Importing the hidden password module for user input
+# import inquirer  # Importing the inquirer module for interactive user prompts
+
 import os  # Importing the os module to interact with the operating system
 import time  # Importing the time module for time-related functions
 import json  # Importing the json module for JSON file operations
-import inquirer  # Importing the inquirer module for interactive user prompts
 from datetime import date  # Importing the date class from the datetime module
-from getpass import getpass # Importing the hidden password module for user input
 import random # Importing random function for slump actions
 import matplotlib.pyplot as plt # importing pylot module to plot grapths
 from tkinter import *
@@ -32,9 +33,9 @@ from email_validator import validate_email, EmailNotValidError  # Importing emai
 """
 Remember to replace the file path with your location of the files and replace the \\(backslah) with / 
 """
-Path_Users = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main/Users.json"  # Path to the users JSON file
-Path_Passwords = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main/Passwords.json"  # Path to the passwords JSON file
-Path_Accounts = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main/Accounts.json"  # Path to the accounts JSON file
+Path_Users = "C:/Users/Willi/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
+Path_Passwords = "C:/Users/Willi/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
+Path_Accounts = "C:/Users/Willi/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
 
 today = date.today()  # Getting today's date
 
@@ -45,7 +46,7 @@ def read_file(filepath:str):
     with open(filepath,"r") as a:
         return json.load(a)
 
-def write_file(filepath:str, data:json, indent:int):
+def write_file(filepath:str, data, indent:int):
     """Fuction to write a dump to a json file, takes the filepath, data and number of indents.
     """
     with open(filepath, "w") as file:
@@ -71,7 +72,7 @@ def check_password(user_id, password:str):
     - Imports the password submitted by the user
     - Returns None + error str if the accounts number of tries left are 0
     - Returns False + error str if the password is incorrect
-    - Returns Account_num if the account password matches the submitted psw
+    - Returns Accountnum if the account password matches the submitted psw
     """
     Passwords_data = read_file(Path_Passwords)
     # Reading user specific data from the stored .json file
@@ -84,9 +85,9 @@ def check_password(user_id, password:str):
     
     # Check if input password is the same as the stored password
     if password == user_psw:
-        account_num = val["account"]  # Getting account number
+        accountnum = val["account"]  # Getting account number
         correct_psw(user_id)
-        return True, account_num
+        return True, accountnum
     else:
         incorrect_psw(user_id)
         return None, trys-1
@@ -114,7 +115,7 @@ def correct_psw(user_id:str):
     Passwords_data['password'][count]['trys'] = 4
     write_file(Path_Passwords,Passwords_data,4)
 
-def transaction(account_num:str, type:str, amount, note:str):
+def transaction(accountnum:str, type:str, amount, note:str):
     """Function to write a transaction between accounts.
     - Imports the type of transaction; Uttag, Insättning
     - Imports the amount to be moved
@@ -123,7 +124,7 @@ def transaction(account_num:str, type:str, amount, note:str):
     """
     # Get data from json file
     Accounts_data = read_file(Path_Accounts)
-    for val in Accounts_data[str(account_num)]:
+    for val in Accounts_data[str(accountnum)]:
         account_balance = val["balance"]
         account_transaction = val["transaction"]
         account_date = val["date"]
@@ -143,7 +144,7 @@ def transaction(account_num:str, type:str, amount, note:str):
     write_file(Path_Accounts,Accounts_data,4)
     return True, 0
 
-def account_transfer(account_num:str, transfer_num:str, amount, note:str):
+def account_transfer(accountnum:str, transfer_num:str, amount, note:str):
     """Function to write a transaction too and from your account.
     - Imports the amount to be moved
     - Imports a note made by the user
@@ -152,7 +153,7 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
     """
     # Get data from json file
     Accounts_data = read_file(Path_Accounts)
-    for val in Accounts_data[str(account_num)]:
+    for val in Accounts_data[str(accountnum)]:
         account_balance = val["balance"]
         account_transaction = val["transaction"]
         account_date = val["date"]
@@ -164,7 +165,7 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
     # Trying to find the inputed account number
     trigger = True
     for val in Accounts_data: # Itterating through Accounts.json 
-        if val == transfer_num and (val != str(account_num)):
+        if val == transfer_num and (val != str(accountnum)):
             trigger = False
             break  
     if trigger: False, "Kontonumret fanns inte att föra över till"
@@ -191,41 +192,101 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
     write_file(Path_Accounts, Accounts_data, 4)
     return True, 0
 
-def new_account(username:str,password:str):
+def create_user(username:str,password:str):
     """Function to create a new account, and add all the users data to the .json file
     - Imports the users username
     - Imports the specific password
     """
     users_data = read_file(Path_Users)
     passwords_data = read_file(Path_Passwords)
-    accounts_data = read_file(Path_Accounts)
- 
+    
     if validate_username(username) == False: # Validate email adress
         return 1
     
-    if check_username(username) == True: # Check if username already exists
+    if check_username(username)[0] == True: # Check if username already exists
         return 2
     
-    user_id = create_id(users_data["master"],"user_id") # Create a unique 6 digit user_id 
-    account_num = create_id(passwords_data['password'],"account") # Create a unique 6 digit account_num 
+    user_id = create_id(users_data["master"],"user_id") # Create a unique 6 digit user_id  
 
     # Writing over the existing files with the new users data
     users_data["master"].append({"user":username,"user_id":user_id})
     write_file(filepath= Path_Users, data= users_data, indent= 2)
     
-    passwords_data["password"].append({"user_id":user_id,"psw":password,"trys":4,"account":account_num})
+    passwords_data["password"].append({"user_id":user_id,"psw":password,"trys":4,"account":[]})
     write_file(filepath= Path_Passwords, data= passwords_data, indent= 2)
     
+    return 0
+
+def new_account(user_id:str, account_type:str, currency:str):
+    """Function to add a new account to an existing profile
+    - Imports user id to append the new account number
+    - Imports account type to create (determained by even or odd account number)
+    - Imports specified currency for the account.
+    - Returns the new appended list of the account numbers.
+    """
+    accounts_data = read_file(Path_Accounts)
+    passwords_data = read_file(Path_Passwords)
+
+    # Reading user specific data from the stored .json file
+    for val in passwords_data["password"]:
+        if user_id == val["user_id"]: break
+    
+    if account_type == "Sparkonto":
+        while True: # Creates a even number for savings account
+            accountnum = create_id(passwords_data['password'],"account") # Create a unique 6 digit accountnum
+            if (accountnum % 2) == 0: break
+    elif account_type == "Betalkonto":
+        while True: # Creates a odd number for payment account
+            accountnum = create_id(passwords_data['password'],"account") # Create a unique 6 digit accountnum
+            if (accountnum % 2) == 1: break
+
+    account_list = val["account"].append(accountnum)
+    write_file(filepath= Path_Passwords, data= passwords_data, indent= 2)
+
     # Appening new Account data
     new_bank_data = [{
+        "currency":[currency],
         "balance": [0],
         "transaction": [""],
         "date": [str(today)],
         "note": ["Konto skapades"]
     }]
-    accounts_data[account_num] = new_bank_data
+    accounts_data[accountnum] = new_bank_data
     write_file(filepath= Path_Accounts, data= accounts_data, indent= 3)
-    return 0
+    
+    return account_list
+
+def get_accounts(user_id:str):
+    """
+    Creates lists of account id, type, currency and balance and returns them in a list.
+    """
+
+    passwords_data = read_file(Path_Passwords)
+    accounts_data = read_file(Path_Accounts)
+
+    # Reading user specific data from the stored .json file
+    for val_psw in passwords_data["password"]:
+        if user_id == val_psw["user_id"]: break
+
+    account_list = val_psw['account']
+    list.sort(account_list)
+    type_list = []
+    for id in account_list:
+        if id % 2 == 0:
+            type_list.append('Sparkonto')
+        elif id % 2 == 1:
+            type_list.append('Betalkonto')
+
+    currency_list = []
+    balance_list = []
+    for val_acc in account_list:        
+        for account in accounts_data[str(val_acc)]:
+            currency = account['currency']
+            balance = account['balance']
+            currency_list.append(currency)
+            balance_list.append(balance[0])
+
+    return account_list, type_list, currency_list, balance_list
 
 def validate_username(email:str):
     """Function to validate email address.
@@ -247,18 +308,16 @@ def create_id(data,id):
         new_id = random.randrange(100000, 999999)  # Generating a random user ID
         trigger = True
         for i in data:
-            print(i)
-            print(new_id, i[id])
             if new_id == i[id]: trigger = False
         if trigger: return new_id
         input("pause")
 
-def balance_history(account_num:str): # Det finns något sätt att embed:a pyplot i Tkinter appen
+def balance_history(accountnum:str): # Det finns något sätt att embed:a pyplot i Tkinter appen
     """Function to plot the balance hotory of a specif account number
     """
     accounts_data = read_file(Path_Accounts)
     # Itterate though the account and save the balance
-    for val in accounts_data[str(account_num)]:
+    for val in accounts_data[str(accountnum)]:
         account_balance = val["balance"]
         account_date = val["date"]
     
@@ -271,7 +330,7 @@ def balance_history(account_num:str): # Det finns något sätt att embed:a pyplo
     plt.locator_params(axis='x', nbins=4) # Number of ticks for the x-axis
     plt.xticks(rotation=30, ha="right") # Rotate the lable for the x-axis ticks by 30 degree
 
-    plt.title(f"{str(account_num)}: Saldo historik",loc= 'left', fontdict= title) # Title
+    plt.title(f"{str(accountnum)}: Saldo historik",loc= 'left', fontdict= title) # Title
     plt.xlabel("Datum") # X-lable
     plt.ylabel("Belopp [sek]") # Y-lable
 
@@ -280,31 +339,31 @@ def balance_history(account_num:str): # Det finns något sätt att embed:a pyplo
     plt.show()
     return
 
-def transaction_history(account_num:str): # Den här måste också ändras för att skriva ut all data nu är det bara print
-    """Function to itterate through the account history displaying it
-    - Imports account number to read the files
-    """
-    accounts_data = read_file(Path_Accounts)
+# def transaction_history(accountnum:str): # Den här måste också ändras för att skriva ut all data nu är det bara print
+#     """Function to itterate through the account history displaying it
+#     - Imports account number to read the files
+#     """
+#     accounts_data = read_file(Path_Accounts)
     
-    # Print the information in the desired format
-    print("{0:<20} | {1:<18} | {2:<16} | {3:<30}\n"
-              .format("Saldo", "Transaktion", "Datum", "Anteckning"))
-    # Itterates through the accounts json data, and prints out each element in order.
-    for item in range(len(accounts_data[str(account_num)][0]['balance'])):
-        balance = accounts_data[str(account_num)][0]['balance'][item]
-        transaction = accounts_data[str(account_num)][0]['transaction'][item]
-        date = accounts_data[str(account_num)][0]['date'][item]
-        note = accounts_data[str(account_num)][0]['note'][item]
+#     # Print the information in the desired format
+#     print("{0:<20} | {1:<18} | {2:<16} | {3:<30}\n"
+#               .format("Saldo", "Transaktion", "Datum", "Anteckning"))
+#     # Itterates through the accounts json data, and prints out each element in order.
+#     for item in range(len(accounts_data[str(accountnum)][0]['balance'])):
+#         balance = accounts_data[str(accountnum)][0]['balance'][item]
+#         transaction = accounts_data[str(accountnum)][0]['transaction'][item]
+#         date = accounts_data[str(accountnum)][0]['date'][item]
+#         note = accounts_data[str(accountnum)][0]['note'][item]
         
-        print("{0:<20} | {1:<18} | {2:<16} | {3:<30}"
-              .format(balance, transaction, date, note, item))
+#         print("{0:<20} | {1:<18} | {2:<16} | {3:<30}"
+#               .format(balance, transaction, date, note, item))
         
-        if item >= 30: # Check if the item is equal to or larger than 30, if so: stop printing
-            print("Kunde endast ladda in de senaste 30 transaktionerna")
-            break
-    input("Tryck enter för att fortsätta") # Remove this if needed
+#         if item >= 30: # Check if the item is equal to or larger than 30, if so: stop printing
+#             print("Kunde endast ladda in de senaste 30 transaktionerna")
+#             break
+#     input("Tryck enter för att fortsätta") # Remove this if needed
 
-    return
+#     return
 
 
 class Application(Tk): # Creates main application that the UI is located in
@@ -314,7 +373,10 @@ class Application(Tk): # Creates main application that the UI is located in
         self.title('Bankomat')
         self.minsize(675, 350)
         self.maxsize(675, 350)
-        self.logged_user = None
+        self.logged_userid = None
+        self.logged_accounts = None
+        self.logged_username = None
+        self.logged_accountnum = None
         
         container = Frame(self)
         container.pack(side='top', fill='both', expand=True)
@@ -322,21 +384,21 @@ class Application(Tk): # Creates main application that the UI is located in
         container.grid_columnconfigure(0, weight=1)
         
         self.frames = {}
-        for F in (Menu, Login, Create_Account, Admin, Logged_In):
+        for F in (StartPage, Login, Create_Account, Admin, Logged_In, Account):
             page_name = F.__name__
             frame = F(parent=container, controller=self)
             self.frames[page_name] = frame
 
             frame.grid(row=0, column=0, sticky='nsew')
         
-        self.show_frame('Menu')
+        self.show_frame('StartPage')
         
     def show_frame(self, page_name):
         frame = self.frames[page_name]
         frame.tkraise()
         
 
-class Menu(Frame):
+class StartPage(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
@@ -358,7 +420,9 @@ class Login(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        self.logged_user = self.controller.logged_user
+        self.logged_accounts = self.controller.logged_accounts
+        self.logged_username = self.controller.logged_username
+        self.logged_userid = self.controller.logged_userid
         label_title = Label(self, text='Logga In')
         label_user = Label(self, text='Användarnamn:')
         label_pin = Label(self, text='Pin-kod:')
@@ -370,7 +434,7 @@ class Login(Frame):
         button_login = Button(self, text='Logga In',
                               command= lambda: login(self.entry_user.get(), self.entry_pin.get()))
         button_back = Button(self, text='Gå Tillbaka',
-                             command= lambda: controller.show_frame('Menu'))
+                             command= lambda: controller.show_frame('StartPage'))
         
         label_title.grid(column=0, row=0, columnspan=2)
         label_user.grid(column=0, row=1, sticky='e')
@@ -392,8 +456,9 @@ class Login(Frame):
             if user[0] == True:
                 trys = check_password(user[1], pin)
                 if trys[0] == True:
-                    self.controller.logged_user = trys[1]
-                    print(trys[1])
+                    self.controller.logged_userid = user[1]
+                    self.controller.logged_accounts = trys[1]
+                    self.controller.logged_username = self.entry_user.get()
                     controller.show_frame('Logged_In')
                 
                 elif trys[0] == False:
@@ -439,7 +504,7 @@ class Create_Account(Frame):
         button_create = Button(self, text='Skapa Konto',
                                command= lambda: create(self.entry_user.get(), self.entry_pin.get(), self.entry_pin2.get()))
         button_back = Button(self, text='Gå Tillbaka',
-                             command= lambda: controller.show_frame('Menu'))
+                             command= lambda: controller.show_frame('StartPage'))
                
         label_title.grid(column=0, row=0, columnspan=2)
         label_user.grid(column=0, row=1, sticky='e')
@@ -463,13 +528,13 @@ class Create_Account(Frame):
                 self.label_error_match.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
                 return
             
-            if new_account(username, pin) == 0:
+            if create_user(username, pin) == 0:
                 self.label_success.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
            
-            elif new_account(username, pin) == 1:
+            elif create_user(username, pin) == 1:
                 self.label_error_invalid.grid(column=0, row=5, sticky='s', pady=10, columnspan=2) 
             
-            elif new_account(username, pin) == 2:
+            elif create_user(username, pin) == 2:
                 self.label_error_exists.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
                             
     def clearentry(self):
@@ -493,7 +558,153 @@ class Logged_In(Frame):
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        self.logged_user = self.controller.logged_user
+        self.logged_accounts = self.controller.logged_accounts
+        self.logged_username = self.controller.logged_username
+        self.logged_userid = self.controller.logged_userid
+        self.logged_accountnum = self.controller.logged_accountnum
+        label_loggedtext = Label(self, text='Inloggad som:')
+        self.label_user = Label(self, text='', fg='magenta')
+        button_logout = Button(self, text='Logga ut',
+                               command= lambda: logout())
+        button_create = Button(self, text='Skapa Konto',
+                               command= lambda: self.create_account())
+        self.entry_create = Entry(self, cursor='xterm')
+        
+        label_loggedtext.grid(column=0, row=0, sticky='w', pady=5)
+        button_logout.grid(column=2, row=0, sticky='w')
+        button_create.grid(column=4, row=0, sticky='e')
+        self.entry_create.grid(column=3, row=0, padx=5, sticky='e')
+
+        self.columnconfigure(3, weight=1)
+        self.rowconfigure(10, weight=1)
+
+        def logout():
+            controller.show_frame('StartPage')
+
+    def create_account(self):
+        create_window = Toplevel(self.controller)
+        create_window.title('Skapa Konto')
+        create_window.minsize(400, 150)
+        create_window.maxsize(400, 150)
+
+        label_name = Label(create_window, text='Kontonamn:')
+        entry_name = Entry(create_window, cursor='xterm')
+        button_create = Button(create_window, text='Skapa',
+                               command= lambda: create())
+        frame_type = Frame(create_window, borderwidth=1, relief='solid')
+        frame_currency = Frame(create_window, borderwidth=1, relief='solid')
+        
+        options_type = [
+            'Välj Kontotyp',
+            'Sparkonto',
+            'Betalkonto'
+        ]
+
+        options_currency = [
+            'Välj Valuta',
+            'SEK',
+            'EUR'
+        ]
+
+        frame_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
+        frame_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w')
+        
+        clicked_type = StringVar()
+        clicked_type.set('Välj Kontotyp')
+        clicked_currency = StringVar()
+        clicked_currency.set('Välj Valuta')
+        option_type = ttk.OptionMenu(frame_type, clicked_type, *options_type)
+        option_type.config(width=12, style='TMenubutton')
+        option_currency = ttk.OptionMenu(frame_currency, clicked_currency, *options_currency)
+        option_currency.config(width=10, style='TMenubutton')
+        
+        style = ttk.Style()
+        style.configure('TMenuButton')
+
+        label_name.grid(column=0, row=0, padx=5, sticky='w')
+        entry_name.grid(column=1, row=0, sticky='w')
+        option_type.pack()
+        option_currency.pack()
+        button_create.grid(column=2, row=1)
+
+        create_window.columnconfigure(2, weight=1)
+        create_window.rowconfigure(3, weight=1)
+
+        def create():
+            new_account(self.controller.logged_userid, clicked_type.get(), clicked_currency.get())
+            self.update_accounts()
+
+            
+
+    def update_accounts(self):
+        self.clear()
+        account_list = get_accounts(self.controller.logged_userid)
+
+        self.buttons = []
+        for i, account in enumerate(account_list[0]):
+            button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[0][i]))
+            button.grid(column=0, row=(1+i), columnspan=4, sticky='w')
+            self.buttons.append(button)
+
+        for i, type in enumerate(account_list[1]):
+            button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[0][i]))
+            button.grid(column=1, row=(1+i), columnspan=4, sticky='w')
+            self.buttons.append(button)          
+
+        for i, currency in enumerate(account_list[2]):
+            button = Button(self, text=currency, relief='solid', borderwidth=1, width=55, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[0][i]))
+            button.grid(column=2, row=(1+i), columnspan=4, sticky='w')
+            self.buttons.append(button)      
+
+        for i, balance in enumerate(account_list[3]):
+            button = Button(self, text=balance, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[0][i]))
+            button.grid(column=3, row=(1+i), columnspan=4, sticky='e')
+            self.buttons.append(button) 
+
+            def switch_to(accountnum):
+                self.controller.logged_accountnum = accountnum
+                self.controller.show_frame('Account')       
+
+    def clear(self):
+        self.entry_create.delete(0, END)
+        
+        try:
+            for button in self.buttons:
+                button.grid_forget()
+        except: None
+
+    def update_user(self):
+        self.label_user.config(text=self.controller.logged_username)
+        self.label_user.grid(column=1, row=0, padx=5, sticky='w')
+
+    def tkraise(self, aboveThis=None):
+        self.update_user()
+        self.update_accounts()
+        super().tkraise(aboveThis)
+
+class Account(Frame):
+
+    def __init__(self, parent, controller):
+        Frame.__init__(self, parent)
+        self.controller = controller
+        self.logged_accountnum = self.controller.logged_accountnum
+
+        self.label = Label(self, text='')
+        button_back = Button(self, text='Tillbaka',
+                             command= lambda: controller.show_frame('Logged_In'))
+        self.label.pack()
+        button_back.pack()
+
+    def update_account(self):
+        self.label.config(text=self.controller.logged_accountnum)
+
+    def tkraise(self, aboveThis=None):
+        self.update_account()
+        super().tkraise(aboveThis)
         
 class Admin(Frame):
     
@@ -505,7 +716,7 @@ class Admin(Frame):
         button_reset_trys = Button(self, text='Återställ Försök',
                                    command= lambda: reset(self.entry_user.get()))
         button_back = Button(self, text='Gå Tillbaka',
-                             command= lambda: controller.show_frame('Menu'))
+                             command= lambda: controller.show_frame('StartPage'))
         
         label_title.grid(column=0, row=0, sticky='n', columnspan=2)
         self.entry_user.grid(column=0, row=1, sticky='e', padx=10)
@@ -530,8 +741,6 @@ class Admin(Frame):
     def tkraise(self, aboveThis=None):
         self.clearframe()
         super().tkraise(aboveThis)
-
-
 
 
 if __name__ == '__main__': # Starts the application
