@@ -275,8 +275,13 @@ def transaction_history(account_num:str): # Den här måste också ändras för 
     print("{0:<20} | {1:<18} | {2:<16} | {3:<30}\n"
               .format("Saldo", "Transaktion", "Datum", "Anteckning"))
     # Itterates through the accounts json data, and prints out each element in order.
-    for item in range(len(accounts_data[str(account_num)][0]['balance'])-1):
-        balance = accounts_data[str(account_num)][0]['balance'][item] - accounts_data[str(account_num)][0]['balance'][item+1]
+    for item in range(len(accounts_data[str(account_num)][0]['balance'])):
+        # if last element
+        if item == (len(accounts_data[str(account_num)][0]['balance']) - 1):
+            balance = accounts_data[str(account_num)][0]['balance'][item]
+        else:
+            # For every other element
+            balance = accounts_data[str(account_num)][0]['balance'][item] - accounts_data[str(account_num)][0]['balance'][item+1]
         transaction = accounts_data[str(account_num)][0]['transaction'][item]
         date = accounts_data[str(account_num)][0]['date'][item]
         note = accounts_data[str(account_num)][0]['note'][item]
