@@ -1,68 +1,172 @@
 {
-   "626678": [
-      {
-         "name": [
-            ""
-         ],
-         "currency": [
-            "EUR"
-         ],
-         "balance": [
-            0
-         ],
-         "transaction": [
-            ""
-         ],
-         "date": [
-            "2024-04-12"
-         ],
-         "note": [
-            "Konto skapades"
-         ]
-      }
-   ],
-   "115190": [
-      {
-         "name": [
-            "Hello"
-         ],
-         "currency": [
-            "SEK"
-         ],
-         "balance": [
-            0
-         ],
-         "transaction": [
-            ""
-         ],
-         "date": [
-            "2024-04-12"
-         ],
-         "note": [
-            "Konto skapades"
-         ]
-      }
-   ],
-   "609140": [
-      {
-         "name": [
-            "A"
-         ],
-         "currency": [
-            "SEK"
-         ],
-         "balance": [
-            0
-         ],
-         "transaction": [
-            ""
-         ],
-         "date": [
-            "2024-04-12"
-         ],
-         "note": [
-            "Konto skapades"
-         ]
-      }
-   ]
+    "626678": [
+        {
+            "name": [
+                ""
+            ],
+            "currency": [
+                "EUR"
+            ],
+            "balance": [
+                100.0,
+                0
+            ],
+            "transaction": [
+                "Konto\u00f6verf\u00f6ring",
+                ""
+            ],
+            "date": [
+                "2024-04-14",
+                "2024-04-12"
+            ],
+            "note": [
+                "",
+                "Konto skapades"
+            ]
+        }
+    ],
+    "115190": [
+        {
+            "name": [
+                "Hello"
+            ],
+            "currency": [
+                "SEK"
+            ],
+            "balance": [
+                900.0,
+                1000.0,
+                1500.1,
+                1500.0,
+                1000.0,
+                1500.0,
+                1000.0,
+                500.0,
+                1000.0,
+                500.0,
+                1000.0,
+                0
+            ],
+            "transaction": [
+                "Konto\u00f6verf\u00f6ring",
+                "Konto\u00f6verf\u00f6ring",
+                "Ins\u00e4ttning",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Ins\u00e4ttning",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Ins\u00e4ttning",
+                ""
+            ],
+            "date": [
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-12"
+            ],
+            "note": [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Swish",
+                "Swish",
+                "Swish",
+                "Swish",
+                "Konto skapades"
+            ]
+        }
+    ],
+    "609140": [
+        {
+            "name": [
+                "A"
+            ],
+            "currency": [
+                "SEK"
+            ],
+            "balance": [
+                1000.0,
+                1100.2,
+                1000.2,
+                1000.1,
+                1100.1,
+                600.0,
+                100.0,
+                0
+            ],
+            "transaction": [
+                "Uttag",
+                "Uttag",
+                "Uttag",
+                "Konto\u00f6verf\u00f6ring",
+                "Konto\u00f6verf\u00f6ring",
+                "Konto\u00f6verf\u00f6ring",
+                "Ins\u00e4ttning",
+                ""
+            ],
+            "date": [
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-14",
+                "2024-04-12"
+            ],
+            "note": [
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+                "Konto skapades"
+            ]
+        }
+    ],
+    "964552": [
+        {
+            "name": [
+                "Society"
+            ],
+            "currency": [
+                "EUR"
+            ],
+            "balance": [
+                100.0,
+                0
+            ],
+            "transaction": [
+                "Konto\u00f6verf\u00f6ring",
+                ""
+            ],
+            "date": [
+                "2024-04-14",
+                "2024-04-14"
+            ],
+            "note": [
+                "",
+                "Konto skapades"
+            ]
+        }
+    ]
 }

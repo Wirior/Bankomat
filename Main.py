@@ -33,9 +33,9 @@ from email_validator import validate_email, EmailNotValidError  # Importing emai
 """
 Remember to replace the file path with your location of the files and replace the \\(backslah) with / 
 """
-Path_Users = "C:/Users/Willi/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
-Path_Passwords = "C:/Users/Willi/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
-Path_Accounts = "C:/Users/Willi/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
+Path_Users = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
+Path_Passwords = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
+Path_Accounts = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
 
 today = date.today()  # Getting today's date
 
@@ -130,19 +130,21 @@ def transaction(accountnum:str, type:str, amount, note:str):
         account_date = val["date"]
         account_note = val["note"]
     
-    if isinstance(amount, (int, float)):  # pass tuple
-        return False, "Strängar kan inte matas in"
+    # if isinstance(amount, (int, float)):  # pass tuple
+    #     return False, "Strängar kan inte matas in"
 
     if type == "Uttag": amount = -1*abs(float(amount)) # Negating amount for withdrawals
-
+    
+    balance = account_balance[0] + float(amount)
+    new_balance = round(balance, 2)
+     
     # Adding the new transaction data to the account
-    account_balance.insert(0, account_balance[0] + float(amount))
+    account_balance.insert(0, new_balance)
     account_transaction.insert(0, type)
     account_date.insert(0, str(today))
     account_note.insert(0, note)
 
     write_file(Path_Accounts,Accounts_data,4)
-    return True, 0
 
 def account_transfer(accountnum:str, transfer_num:str, amount, note:str):
     """Function to write a transaction too and from your account.
@@ -159,8 +161,8 @@ def account_transfer(accountnum:str, transfer_num:str, amount, note:str):
         account_date = val["date"]
         account_note = val["note"]
     
-    if isinstance(amount, (int, float)):  # pass tuple
-        return False, "Strängar kan inte matas in"
+    # if isinstance(amount, (int, float)):  # pass tuple
+    #     return False, "Strängar kan inte matas in"
 
     # Trying to find the inputed account number
     trigger = True
@@ -170,8 +172,11 @@ def account_transfer(accountnum:str, transfer_num:str, amount, note:str):
             break  
     if trigger: False, "Kontonumret fanns inte att föra över till"
 
+    remove_balance = account_balance[0] - abs(float(amount))
+    removed_balance = round(remove_balance, 2)
+
     # Adding the new transaction data to the account
-    account_balance.insert(0, account_balance[0] - abs(float(amount)))
+    account_balance.insert(0, removed_balance)
     account_transaction.insert(0, "Kontoöverföring")
     account_date.insert(0, str(today))
     account_note.insert(0, note)
@@ -182,9 +187,12 @@ def account_transfer(accountnum:str, transfer_num:str, amount, note:str):
         t_account_transaction = val["transaction"]
         t_account_date = val["date"]
         t_account_note = val["note"]
+
+        add_balance = t_account_balance[0] + abs(float(amount))
+        added_balance = round(add_balance, 2)
     
     # Adding the new transaction data to the account
-    t_account_balance.insert(0, t_account_balance[0] + abs(float(amount)))
+    t_account_balance.insert(0, added_balance)
     t_account_transaction.insert(0, "Kontoöverföring")
     t_account_date.insert(0, str(today))
     t_account_note.insert(0, note)
@@ -290,7 +298,7 @@ def get_accounts(user_id:str):
             currency_list.append(currency)
             balance_list.append(balance[0])
 
-    return name_list, account_list, type_list, currency_list, balance_list
+    return name_list, account_list, type_list, balance_list, currency_list
 
 def validate_username(email:str):
     """Function to validate email address.
@@ -381,6 +389,7 @@ class Application(Tk): # Creates main application that the UI is located in
         self.logged_accounts = None
         self.logged_username = None
         self.logged_accountnum = None
+        self.logged_i = None
         
         container = Frame(self)
         container.pack(side='top', fill='both', expand=True)
@@ -566,6 +575,7 @@ class Logged_In(Frame):
         self.logged_username = self.controller.logged_username
         self.logged_userid = self.controller.logged_userid
         self.logged_accountnum = self.controller.logged_accountnum
+        self.logged_i = self.controller.logged_i
         frame_info = Frame(self)
         label_loggedtext = Label(frame_info, text='Inloggad som:')
         self.label_user = Label(frame_info, text='', fg='magenta')
@@ -647,36 +657,37 @@ class Logged_In(Frame):
         self.buttons = []
         for i, name in enumerate(account_list[0]):
             button = Button(self, text=name, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i]))
+                            command= lambda i=i: switch_to(account_list[1][i], i))
             button.grid(column=0, row=(1+i), columnspan=4, sticky='w')
             self.buttons.append(button)
         
         for i, account in enumerate(account_list[1]):
             button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i]))
+                            command= lambda i=i: switch_to(account_list[1][i], i))
             button.grid(column=1, row=(1+i), columnspan=4, sticky='w')
             self.buttons.append(button)
 
         for i, type in enumerate(account_list[2]):
             button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i]))
+                            command= lambda i=i: switch_to(account_list[1][i], i))
             button.grid(column=2, row=(1+i), columnspan=4, sticky='w')
             self.buttons.append(button)          
 
-        for i, currency in enumerate(account_list[3]):
-            button = Button(self, text=currency, relief='solid', borderwidth=1, width=55, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i]))
-            button.grid(column=3, row=(1+i), columnspan=4, sticky='w')
+        for i, balance in enumerate(account_list[3]):
+            button = Button(self, text=balance, relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
+                            command= lambda i=i: switch_to(account_list[1][i], i))
+            button.grid(column=3, row=(1+i), sticky='e')
             self.buttons.append(button)      
 
-        for i, balance in enumerate(account_list[4]):
-            button = Button(self, text=balance, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i]))
+        for i, currency in enumerate(account_list[4]):
+            button = Button(self, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
+                            command= lambda i=i: switch_to(account_list[1][i], i))
             button.grid(column=4, row=(1+i), columnspan=4, sticky='e')
             self.buttons.append(button) 
 
-            def switch_to(accountnum):
+            def switch_to(accountnum, i):
                 self.controller.logged_accountnum = accountnum
+                self.controller.logged_i = i
                 self.controller.show_frame('Account')       
 
     def clear(self):        
@@ -700,17 +711,150 @@ class Account(Frame):
         Frame.__init__(self, parent)
         self.controller = controller
         self.logged_accountnum = self.controller.logged_accountnum
+        self.logged_userid = self.controller.logged_userid
+        self.logged_i = self.controller.logged_i
 
-        self.label = Label(self, text='')
+        self.frame = Frame(self, borderwidth=1, relief='solid')
+        label = Label(self, text='Kontonummer:')
+        self.label_balance = Label(self, text='', fg='lime green')
+        self.label_accountnum = Label(self, text='', fg='magenta')
         button_back = Button(self, text='Tillbaka',
                              command= lambda: controller.show_frame('Logged_In'))
-        self.label.grid(column=1, row=0)
-        button_back.grid(column=0, row=0, sticky='nw')
+        button_deposit = Button(self, text='Insättning',
+                                command= lambda: set_frame('Insättning'))
+        button_withdraw = Button(self, text='Uttag',
+                                 command= lambda: set_frame('Uttag'))
+        button_transaction = Button(self, text='Överföring',
+                                    command= lambda: set_transfer())
+        
+        self.frame.grid(column=2, row=2, rowspan=10, sticky='n')
+        label.grid(column=0, row=0, pady=5)
+        self.label_accountnum.grid(column=1, row=0, padx=5)
+        self.label_balance.grid(column=3, row=0, sticky='e')
+        button_back.grid(column=2, row=0, sticky='w')
+        button_deposit.grid(column=0, row=1, sticky='w', padx=5)
+        button_withdraw.grid(column=0, row=2, pady=5, sticky='w', padx=5)
+        button_transaction.grid(column=0, row=3, sticky='w', padx=5)
+
+        self.columnconfigure(3, weight=1)
+        self.rowconfigure(10, weight=1)
+
+        def set_frame(type:str):
+            self.clear()
+            label_deposit = Label(self.frame, text=type + ':')
+            label_note = Label(self.frame, text='Anteckning:')
+            label_currency = Label(self.frame, text=self.currency)
+            button_confirm = Button(self.frame, text='Godkänn')
+            entry_amount = Entry(self.frame, cursor='xterm')
+            textbox_note = Text(self.frame, cursor='xterm', width=33, height=5)
+            label_success = Label(self.frame, text=type + ' lyckades', fg='lime green')
+            label_error = Label(self.frame, text=type + ' måste vara ett nummer', fg='red')
+            button_confirm.config(command= lambda: trans(type))
+
+            label_deposit.grid(column=0, row=0, sticky='w', padx=5, pady=5)
+            entry_amount.grid(column=0, row=1, sticky='w', padx=5, columnspan=2)
+            label_currency.grid(column=2, row=1, sticky='w')
+            label_note.grid(column=0, row=3, sticky='w', padx=5)
+            textbox_note.grid(column=0, row=4, sticky='w', columnspan=4, padx=5, pady=5)
+            button_confirm.grid(column=3, row=1, padx=5, sticky='e')
+
+            self.frame.columnconfigure(3, weight=1)
+
+            def trans(type:str):
+                label_error.grid_forget()
+                label_success.grid_forget()
+                try:
+                    value = float(entry_amount.get())
+                    transaction(self.controller.logged_accountnum, type, value, textbox_note.get('1.0', 'end-1c'))
+                    label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
+                    entry_amount.delete(0, END)
+                    textbox_note.delete('1.0', END)
+                    self.update_account()
+
+
+                except:
+                    label_error.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
+
+        def set_transfer():
+            self.clear()
+            label_transfer = Label(self.frame, text='Överföring:')
+            label_account = Label(self.frame, text=self.controller.logged_accountnum, borderwidth=1, relief='solid')
+            label_to = Label(self.frame, text='Till')
+            label_note = Label(self.frame, text='Anteckning:')
+            label_error = Label(self.frame, text='Överföring måste vara ett nummer', fg='red')
+            label_choose = Label(self.frame, text='Välj ett konto', fg='red')
+            label_success = Label(self.frame, text='Överföring Lyckades', fg='lime green')
+            label_currency = Label(self.frame, text=self.currency)
+            frame_accounts = Frame(self.frame, borderwidth=1, relief='solid')
+            button_confirm = Button(self.frame, text='Godkänn',
+                                    command= lambda: transfer())
+            entry_amount = Entry(self.frame, cursor='xterm')
+            textbox_note = Text(self.frame, cursor='xterm', width=33, height=5)
+
+            option_accounts = [
+                'Välj Konto'
+            ]
+
+            accounts = get_accounts(self.controller.logged_userid)
+            for i, account in enumerate(accounts[0]):
+                if i != self.controller.logged_i:
+                    new_account = str(account).strip("[']")
+                    option_accounts.append(new_account + ': ' + str(accounts[1][i]))
+            
+            clicked_account = StringVar()
+            clicked_account.set('Välj Konto')
+            option_accounts = ttk.OptionMenu(frame_accounts, clicked_account, *option_accounts)
+            option_accounts.config(width=10)
+
+            label_transfer.grid(column=0, row=0, sticky='w', columnspan=3, padx=5)
+            label_account.grid(column=0, row=1, pady=5, sticky='e', padx=5)
+            label_to.grid(column=1, row=1, padx=5, sticky='w')
+            label_note.grid(column=0, row=3, sticky='w', padx=5)
+            label_currency.grid(column=1, row=2, sticky='w', padx=5)
+            frame_accounts.grid(column=2, row=1, sticky='w')
+            textbox_note.grid(column=0, row=4, sticky='w', columnspan=4, padx=5, pady=5)
+            option_accounts.pack()
+            entry_amount.grid(column=0, row=2, sticky='w', padx=5, pady=5)
+            button_confirm.grid(column=2, row=2, sticky='e', padx=5)
+
+            self.frame.columnconfigure(3, weight=1)
+
+            def transfer():
+                label_error.grid_forget()
+                label_choose.grid_forget()
+                label_success.grid_forget()
+                try:
+                    value = float(entry_amount.get())
+                    transfer_account = clicked_account.get().split(': ')
+
+                except:
+                    label_error.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
+                    return
+
+                if clicked_account.get() != 'Välj Konto' and value < accounts[3][self.controller.logged_i]:
+                    account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'))
+                    label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
+                    self.update_account()
+
+                else:
+                    label_choose.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
+                
+
+    def clear(self):
+        self.frame.destroy()
+        self.frame = Frame(self, borderwidth=1, relief='solid')
+        self.frame.grid(column=2, row=2, rowspan=10, sticky='n')        
 
     def update_account(self):
-        self.label.config(text=self.controller.logged_accountnum)
+        accounts = get_accounts(self.controller.logged_userid)
+        balance = accounts[3][self.controller.logged_i]
+        currency = accounts[4][self.controller.logged_i]
+        self.currency = currency[0]
+        self.label_balance.config(text='Saldo: ' + str(balance) + ' ' + str(self.currency))
+        self.label_accountnum.config(text=self.controller.logged_accountnum)
 
     def tkraise(self, aboveThis=None):
+        self.clear()
         self.update_account()
         super().tkraise(aboveThis)
         
