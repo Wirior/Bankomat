@@ -8,18 +8,22 @@
                 "EUR"
             ],
             "balance": [
+                50.0,
                 100.0,
                 0
             ],
             "transaction": [
                 "Konto\u00f6verf\u00f6ring",
+                "Konto\u00f6verf\u00f6ring",
                 ""
             ],
             "date": [
+                "2024-04-15",
                 "2024-04-14",
                 "2024-04-12"
             ],
             "note": [
+                "",
                 "",
                 "Konto skapades"
             ]
@@ -102,6 +106,7 @@
                 "SEK"
             ],
             "balance": [
+                1050.0,
                 1000.0,
                 1100.2,
                 1000.2,
@@ -112,6 +117,7 @@
                 0
             ],
             "transaction": [
+                "Konto\u00f6verf\u00f6ring",
                 "Uttag",
                 "Uttag",
                 "Uttag",
@@ -122,6 +128,7 @@
                 ""
             ],
             "date": [
+                "2024-04-15",
                 "2024-04-14",
                 "2024-04-14",
                 "2024-04-14",
@@ -132,6 +139,7 @@
                 "2024-04-12"
             ],
             "note": [
+                "",
                 "",
                 "",
                 "",
@@ -165,6 +173,72 @@
             ],
             "note": [
                 "",
+                "Konto skapades"
+            ]
+        }
+    ],
+    "774692": [
+        {
+            "name": [
+                "Konto"
+            ],
+            "currency": [
+                "SEK"
+            ],
+            "balance": [
+                0
+            ],
+            "transaction": [
+                ""
+            ],
+            "date": [
+                "2024-04-14"
+            ],
+            "note": [
+                "Konto skapades"
+            ]
+        }
+    ],
+    "568276": [
+        {
+            "name": [
+                "Konto2"
+            ],
+            "currency": [
+                "EUR"
+            ],
+            "balance": [
+                0
+            ],
+            "transaction": [
+                ""
+            ],
+            "date": [
+                "2024-04-14"
+            ],
+            "note": [
+                "Konto skapades"
+            ]
+        }
+    ],
+    "599979": [
+        {
+            "name": [
+                "Betal"
+            ],
+            "currency": [
+                "SEK"
+            ],
+            "balance": [
+                0
+            ],
+            "transaction": [
+                ""
+            ],
+            "date": [
+                "2024-04-14"
+            ],
+            "note": [
                 "Konto skapades"
             ]
         }

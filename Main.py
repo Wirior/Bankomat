@@ -278,7 +278,6 @@ def get_accounts(user_id:str):
         if user_id == val_psw["user_id"]: break
 
     account_list = val_psw['account']
-    list.sort(account_list)
     type_list = []
     for id in account_list:
         if id % 2 == 0:
@@ -297,6 +296,10 @@ def get_accounts(user_id:str):
             name_list.append(name)
             currency_list.append(currency)
             balance_list.append(balance[0])
+            
+    combined = list(zip(name_list, account_list, type_list, balance_list, currency_list))
+    combined.sort()
+    name_list, account_list, type_list, balance_list, currency_list = zip(*combined)
 
     return name_list, account_list, type_list, balance_list, currency_list
 
@@ -602,6 +605,9 @@ class Logged_In(Frame):
         create_window.maxsize(400, 150)
 
         label_name = Label(create_window, text='Kontonamn:')
+        label_error = Label(create_window, text='Måste välja kontotyp och valuta', fg='red')
+        label_success = Label(create_window, text='Konto skapades', fg='lime green')
+        label_error_name = Label(create_window, text='Konto måste namnges', fg='red')
         entry_name = Entry(create_window, cursor='xterm')
         button_create = Button(create_window, text='Skapa',
                                command= lambda: create())
@@ -621,7 +627,7 @@ class Logged_In(Frame):
         ]
 
         frame_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
-        frame_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w')
+        frame_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w', columnspan=2)
         
         clicked_type = StringVar()
         clicked_type.set('Välj Kontotyp')
@@ -645,9 +651,23 @@ class Logged_In(Frame):
         create_window.rowconfigure(3, weight=1)
 
         def create():
-            new_account(self.controller.logged_userid, clicked_type.get(), clicked_currency.get(), entry_name.get())
-            self.update_accounts()
+            label_error.grid_forget()
+            label_error_name.grid_forget()
+            label_success.grid_forget()
+            if clicked_type.get() != 'Välj Kontotyp' and clicked_currency.get() != 'Välj Valuta' and entry_name.get() != '':
+                    new_account(self.controller.logged_userid, clicked_type.get(), clicked_currency.get(), entry_name.get())
+                    label_success.grid(column=2, row=0, sticky='e')
+                    entry_name.delete(0, END)
+                    option_type.pack()
+                    option_currency.pack()
+                    self.update_accounts()
+            
+            elif entry_name.get() == '':
+                label_error_name.grid(column=2, row=0, sticky='e')
 
+            else:
+                label_error.grid(column=2, row=0, sticky='e')
+                
             
 
     def update_accounts(self):
