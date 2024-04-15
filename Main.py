@@ -25,6 +25,8 @@ import json  # Importing the json module for JSON file operations
 from datetime import date  # Importing the date class from the datetime module
 import random # Importing random function for slump actions
 import matplotlib.pyplot as plt # importing pylot module to plot grapths
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import *
 from tkinter import ttk
 
@@ -341,18 +343,28 @@ def balance_history(accountnum:str): # Det finns något sätt att embed:a pyplot
     dates = []
     for index in reversed(account_date): dates.append(index) # Reversed list of the dates
 
-    title = {'family':'sans-serif','color':'black','size':18} # Set the title with font, colour and size
-    plt.locator_params(axis='x', nbins=4) # Number of ticks for the x-axis
-    plt.xticks(rotation=30, ha="right") # Rotate the lable for the x-axis ticks by 30 degree
+    return balance, dates
 
-    plt.title(f"{str(accountnum)}: Saldo historik",loc= 'left', fontdict= title) # Title
-    plt.xlabel("Datum") # X-lable
-    plt.ylabel("Belopp [sek]") # Y-lable
-
-    print("Stäng ner grafens fönstret för att fortsätta...")
-    plt.plot(dates, balance)
-    plt.show()
-    return
+def get_history(accountnum:str, currency:str):
+    """Function to create a list of all events in account
+    """
+    
+    accounts_data = read_file(Path_Accounts)
+    
+    amount_list = []
+    for account in accounts_data[str(accountnum)]:
+        balance_list = account['balance']
+        transaction_list = account['transaction']
+        date_list = account['date']
+        note_list = account['note']
+        
+    for i, balance in enumerate(balance_list):
+        if i < (len(balance_list) - 1):
+            amount = balance - balance_list[i + 1]
+            amount_list.append(str(round(amount, 2)) + ' ' + currency)
+    amount_list.append('')
+        
+    return amount_list, transaction_list, date_list, note_list
 
 # def transaction_history(accountnum:str): # Den här måste också ändras för att skriva ut all data nu är det bara print
 #     """Function to itterate through the account history displaying it
@@ -740,23 +752,29 @@ class Account(Frame):
         self.label_accountnum = Label(self, text='', fg='magenta')
         button_back = Button(self, text='Tillbaka',
                              command= lambda: controller.show_frame('Logged_In'))
+        button_show = Button(self, text='Visa Historik',
+                             command= lambda: show_plot())
         button_deposit = Button(self, text='Insättning',
                                 command= lambda: set_frame('Insättning'))
         button_withdraw = Button(self, text='Uttag',
                                  command= lambda: set_frame('Uttag'))
         button_transaction = Button(self, text='Överföring',
                                     command= lambda: set_transfer())
-        
-        self.frame.grid(column=2, row=2, rowspan=10, sticky='n')
+        button_history = Button(self, text='Visa Transaktioner',
+                                command= lambda: show_history())
+                
         label.grid(column=0, row=0, pady=5)
         self.label_accountnum.grid(column=1, row=0, padx=5)
-        self.label_balance.grid(column=3, row=0, sticky='e')
+        self.label_balance.grid(column=2, row=0, sticky='e')
         button_back.grid(column=2, row=0, sticky='w')
         button_deposit.grid(column=0, row=1, sticky='w', padx=5)
         button_withdraw.grid(column=0, row=2, pady=5, sticky='w', padx=5)
         button_transaction.grid(column=0, row=3, sticky='w', padx=5)
+        button_show.grid(column=0, row=4, sticky='w', padx=5, pady=5)
+        button_history.grid(column=0, row=5, sticky='w', padx=5, columnspan=2)
+        self.frame.grid(column=2, row=2, rowspan=10, sticky='wn', columnspan=3)
 
-        self.columnconfigure(3, weight=1)
+        self.columnconfigure(2, weight=1)
         self.rowconfigure(10, weight=1)
 
         def set_frame(type:str):
@@ -859,7 +877,67 @@ class Account(Frame):
                 else:
                     label_choose.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
                 
+        def show_plot():
+            self.clear()
+            balance, dates = balance_history(self.controller.logged_accountnum)
+            title = {'family':'sans-serif','color':'black','size':14}
+            fig = Figure(figsize=(4, 2))
+            fig.subplots_adjust(left=0.18, right=0.9, top=0.86, bottom=0.22)
+            fig.tight_layout()
+            ax = fig.add_subplot(111)
+            
+            ax.plot(dates, balance)
+            ax.set_xlabel('Datum')
+            ax.set_ylabel('Belopp ' + self.currency)
+            ax.set_title(f"{str(self.controller.logged_accountnum)}: Saldo Historik",loc= 'left',fontdict=title)
+            
+            canvas = FigureCanvasTkAgg(fig, master=self.frame)
+            canvas.draw()
+            canvas.get_tk_widget().pack()
+            
+        def show_history():
+            self.clear()
 
+            label_date = Label(self.frame, text='Datum', relief='ridge', bg='white', borderwidth=1)
+            label_transaction = Label(self.frame, text='Transaktionstyp', relief='ridge', bg='white', borderwidth=1)
+            label_amount = Label(self.frame, text='Överfört Belopp', relief='ridge', bg='white', borderwidth=1)
+            label_note = Label(self.frame, text='Anteckning', relief='ridge', bg='white', borderwidth=1)
+            listbox_history_date = Listbox(self.frame, relief='ridge', width=10) # Listbox() is a widget that displays a list of values in a scrollable box format
+            listbox_history_transaction = Listbox(self.frame, relief='ridge')
+            listbox_history_amount = Listbox(self.frame, relief='ridge')
+            listbox_history_note = Listbox(self.frame, relief='ridge')
+            listboxes = [listbox_history_date, listbox_history_transaction, listbox_history_amount, listbox_history_note]
+            
+            amount_list, transaction_list, date_list, note_list = get_history(self.controller.logged_accountnum, self.currency)
+            
+            for i in date_list: # Adds dates to first listbox
+                listbox_history_date.insert(END, i)
+            listbox_history_date.grid(column=0, row=1, sticky='nswe')
+
+            for i in transaction_list:
+                listbox_history_transaction.insert(END, i)
+            listbox_history_transaction.grid(column=1, row=1, sticky='nswe')
+
+            for i in amount_list:
+                listbox_history_amount.insert(END, i)
+            listbox_history_amount.grid(column=2, row=1, sticky='nswe')
+
+            for i in note_list:
+                listbox_history_note.insert(END, i)
+            listbox_history_note.grid(column=3, row=1, sticky='nswe')
+
+            def on_mousewheel(event): # Makes the user able to control all listboxes at the same time with their mousewheel
+                for listbox in listboxes:
+                    listbox.yview_scroll(-1*event.delta//120, 'units')
+                    
+            label_date.grid(column=0, row=0, sticky='nswe')
+            label_transaction.grid(column=1, row=0, sticky='nswe')
+            label_amount.grid(column=2, row=0, sticky='nswe')
+            label_note.grid(column=3, row=0, sticky='nswe')
+            
+            for listbox in listboxes: # Binds MouseWheel to function giving it control over listboxes
+                listbox.bind('<MouseWheel>', on_mousewheel)                        
+        
     def clear(self):
         self.frame.destroy()
         self.frame = Frame(self, borderwidth=1, relief='solid')
