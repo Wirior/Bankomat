@@ -242,24 +242,28 @@
             "name": "",
             "currency": "SEK",
             "balance": [
+                583.6072130445932,
                 603.6072130445932,
                 600.8699838152161,
                 300.0,
                 0
             ],
             "transaction": [
+                "Konto\u00f6verf\u00f6ring",
                 "M\u00e5nads r\u00e4nta",
                 "M\u00e5nads r\u00e4nta",
                 "Konto\u00f6verf\u00f6ring",
                 ""
             ],
             "date": [
+                "2024-04-15",
                 "2024-04-12",
                 "2024-04-12",
                 "2024-04-09",
                 "2024-04-09"
             ],
             "note": [
+                "gg",
                 "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.004555443445514% ",
                 "M\u00e5ndasr\u00e4ntan l\u00e5g p\u00e5 1.0028999460507204% ",
                 "arbete",
@@ -302,15 +306,27 @@
             "name": "go fund me",
             "currency": "USD",
             "balance": [
+                21.4,
+                1.4,
+                2.4,
                 0
             ],
             "transaction": [
+                "Ins\u00e4ttning",
+                "Uttag",
+                "Konto\u00f6verf\u00f6ring",
                 ""
             ],
             "date": [
+                "2024-04-15",
+                "2024-04-15",
+                "2024-04-15",
                 "2024-04-15"
             ],
             "note": [
+                "l\u00f6n",
+                "spel",
+                "gg",
                 "Konto skapades"
             ]
         }
