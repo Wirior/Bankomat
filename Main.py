@@ -85,6 +85,8 @@ def check_password(user_id:str, password:str):
     
 def incorrect_psw(user_id:str):
     """Function to increment the number of failed log ins a user has done 
+    - Imports user id to read password data
+    - Return True when updated the accounts trys  
     """
     Passwords_data = read_file(Path_Passwords)
     # Reading user specific data from the stored .json file
@@ -96,11 +98,12 @@ def incorrect_psw(user_id:str):
     write_file(Path_Passwords,Passwords_data,4)
     return True
 
-def transaction(account_num:str, type:str, amount, note:str):
+def transaction(account_num:str, type:str, amount:str, note:str, currency= "SEK"):
     """Function to write a transaction between accounts.
     - Imports the type of transaction; Uttag, Insättning
     - Imports the amount to be moved
     - Imports a note made by the user
+    - Returns False if it is a savings account
     - Returns False + error message if the balance can't be transferd
     - Returns False + error if your savings go below 0 
     """
@@ -111,20 +114,21 @@ def transaction(account_num:str, type:str, amount, note:str):
     # Get data from json file
     Accounts_data = read_file(Path_Accounts)
     for val in Accounts_data[str(account_num)]:
+        account_currency = val["currency"]
         account_balance = val["balance"]
         account_transaction = val["transaction"]
         account_date = val["date"]
         account_note = val["note"]
     
-    if isinstance(amount, (int, float)):  # pass tuple
-        return False, "Strängar kan inte matas in"
+    exchanged_amount, error = currency_exchange(account_num, amount, currency)
+    if error: return False, error # If there was an error during the exchange of currency then 
 
-    if type == "Uttag": amount = -1*abs(float(amount)) # Negating amount for withdrawals
+    if type == "Uttag": amount = -1*abs(float(exchanged_amount)) # Negating amount for withdrawals
 
-    if (account_balance[0] + float(amount)) < 0: return False, "Kan inte göra uttag större än saldot"
+    if (account_balance[0] + float(exchanged_amount)) < 0: return False, "Kan inte göra uttag större än saldot"
 
     # Adding the new transaction data to the account
-    account_balance.insert(0, account_balance[0] + float(amount))
+    account_balance.insert(0, account_balance[0] + float(exchanged_amount))
     account_transaction.insert(0, type)
     account_date.insert(0, str(today))
     account_note.insert(0, note)
@@ -132,7 +136,7 @@ def transaction(account_num:str, type:str, amount, note:str):
     write_file(Path_Accounts,Accounts_data,4)
     return True, 0
 
-def account_transfer(account_num:str, transfer_num:str, amount, note:str):
+def account_transfer(account_num:str, transfer_num:str, amount:float, note:str):
     """Function to write a transaction too and from your account.
     - Imports the amount to be moved
     - Imports a note made by the user
@@ -143,14 +147,12 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
     # Get data from json file
     Accounts_data = read_file(Path_Accounts)
     for val in Accounts_data[str(account_num)]:
+        account_currency = val["currency"]
         account_balance = val["balance"]
         account_transaction = val["transaction"]
         account_date = val["date"]
         account_note = val["note"]
     
-    if not isinstance(amount, (int, float)):  # pass tuple
-        return False, "Strängar kan inte matas in"
-
     # Trying to find the inputed account number
     trigger = True
     for val in Accounts_data: # Itterating through Accounts.json
@@ -161,6 +163,7 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
 
     # Itterating through the Transfer Accounts data
     for val in Accounts_data[str(transfer_num)]: # Read the transfer account
+        t_account_currency = val["currency"]
         t_account_balance = val["balance"]
         t_account_transaction = val["transaction"]
         t_account_date = val["date"]
@@ -174,6 +177,10 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
         if not check_days_passed(account_date[0], days_passed= days_lock_account):
             return False, f"Du kan endast överföra pengar från ett konto {days_lock_account} dagar från att senaste konto händelsen"
     
+    # Convert currency to the desired currency
+    exchanged_amount ,error = currency_exchange(account_num= account_num, amount= amount, target_currency= t_account_currency)
+    if error: return False, error 
+    
     # Adding the new transaction data to the account
     account_balance.insert(0, account_balance[0] - abs(float(amount)))
     account_transaction.insert(0, "Kontoöverföring")
@@ -181,7 +188,7 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str):
     account_note.insert(0, note)
 
     # Adding the new transaction data to the account
-    t_account_balance.insert(0, t_account_balance[0] + abs(float(amount)))
+    t_account_balance.insert(0, t_account_balance[0] + abs(float(exchanged_amount)))
     t_account_transaction.insert(0, "Kontoöverföring")
     t_account_date.insert(0, str(today))
     t_account_note.insert(0, note)
@@ -193,6 +200,8 @@ def create_user(username:str,password:str):
     """Function to create a new account, and add all the users data to the .json file
     - Imports the users username
     - Imports the specific password
+    - Returns False + Error message if valide_user or check_username fails
+    - Returns True + 0 if sucessfylly created a user
     """
     users_data = read_file(Path_Users)
     passwords_data = read_file(Path_Passwords)
@@ -217,6 +226,9 @@ def create_user(username:str,password:str):
 
 def validate_username(email:str):
     """Function to validate email address.
+    - Imports emailadress
+    - Returns False + Error if the email is not valid
+    - Returnes the email + 0 if the email is valid
     """
     try:
         # Check that the email address is valid. Turn on check_deliverability
@@ -244,6 +256,7 @@ def balance_history(account_num:str): # Det finns något sätt att embed:a pyplo
     accounts_data = read_file(Path_Accounts)
     # Itterate though the account and save the balance
     for val in accounts_data[str(account_num)]:
+        account_currency = val["currency"]
         account_balance = val["balance"]
         account_date = val["date"]
     
@@ -258,7 +271,7 @@ def balance_history(account_num:str): # Det finns något sätt att embed:a pyplo
 
     plt.title(f"{str(account_num)}: Saldo historik",loc= 'left', fontdict= title) # Title
     plt.xlabel("Datum") # X-lable
-    plt.ylabel("Belopp [sek]") # Y-lable
+    plt.ylabel(f"Belopp [{account_currency}]") # Y-lable
 
     print("Stäng ner grafens fönstret för att fortsätta...")
     plt.plot(dates, balance)
@@ -401,6 +414,8 @@ def interest():
                 account_transaction = val["transaction"]
                 account_date = val["date"]
                 account_note = val["note"]
+            # Check if the account has 
+            if not check_days_passed(account_date[0], days_passed= 1): break
             # Calculate the intrest for the account
             new_balance = account_balance[0] * interest_rate
 
@@ -412,6 +427,38 @@ def interest():
     # Writing to file when all savings accounts have been added
     write_file(Path_Accounts, accounts_data, 4)  
     return
+
+def currency_exchange(account_num:str, amount:str, target_currency:str):
+    """Functio do do currency exchange from a given value.
+    - Imports account number
+    - Imports amount to be exchanged
+    - Imports the targeted currency
+    - Returns the same value if the currency is the same
+    - Returns False + error i the currency is not supported
+    - Returns the transformed value based on the exchange rates
+    """
+    # Read the Accounts.json file
+    accounts_data = read_file(Path_Accounts)
+    
+    # Read currency from the account 
+    source_currency = accounts_data[str(account_num)][0]['currency']
+
+    # Check if the target currency is the same as currency.
+    if source_currency == target_currency: return abs(float(amount)), 0
+    
+    # There are 5 exchange rates. From the 5 different currencies to the corresponding value in the target currency. The amount should be multiplied by this factor later.
+    exchange_rates = {"SEK": {"USD": 0.12, "EUR": 0.11, "DKK": 0.84, "NOK": 1.32},
+                      "USD": {"SEK": 8.69, "EUR": 0.91, "DKK": 6.76, "NOK": 10.56},
+                      "EUR": {"SEK": 9.18, "USD": 1.10, "DKK": 7.43, "NOK": 11.62},
+                      "DKK": {"SEK": 1.19, "USD": 0.15, "EUR": 0.13, "NOK": 1.57},
+                      "NOK": {"SEK": 0.76, "USD": 0.09, "EUR": 0.086, "DKK": 0.64}}
+    
+    # Check if the selected target currency is among the 5 exchange rates. 
+    if target_currency not in exchange_rates[source_currency]: return False, "Den angivna målvalutan stöds inte för valutaväxling."
+    
+    # Calculate the equivalent value in the target currency from the amount to be exchanged. 
+    exchanged_amount = float(amount) * exchange_rates[source_currency][target_currency]
+    return exchanged_amount, 0
 
 
 
@@ -556,6 +603,7 @@ def Account_Transaction(account_num):
     accounts_data = read_file(Path_Accounts)
     
     for val in accounts_data[str(account_num)]:
+        account_currency = val["currency"]
         account_balance = val["balance"]
         
     while True:
@@ -563,7 +611,7 @@ def Account_Transaction(account_num):
         print("Bankomat \n")
 
         # Printing current balance
-        print("Nuvarande belopp:", round(account_balance[0],2), " kr")  
+        print("Nuvarande belopp:", round(account_balance[0],2), " "+ account_currency)  
         
         # Prompting user to choose a transaction type
         questions = [ inquirer.List('transaction', message="Välj interaktion", choices=["Uttag", "Insättning", "Kontoöverföring", "Tillbaka"], ), ]
@@ -578,16 +626,29 @@ def Account_Transaction(account_num):
         
         text1 = ("Skriv in " + answers["transaction"] + " beloppet \n")  # Prompting for transaction amount
         text2 = ("Göra en kort anteckning till " + answers["transaction"] + "\n")  # Prompting for a note
-        
-        value = input(text1)  # Getting transaction amount and negating it for withdrawals
+        status = True
+        error = ""
+
+        try:
+            value = float(input(text1))  # Getting transaction amount and negating it for withdrawals
+        except:
+            value = 0
+            status = False
+            error = "Strängar kan inte hanteras"
         note = input(text2)  # Getting transaction note
 
-        if answers["transaction"] == "Kontoöverföring":
-            t_account_num = input("Skriv in kontonummer att skicka till: ")
-            status, error = account_transfer(account_num,t_account_num,value,note)
-        else:
-            status, error = transaction(account_num, answers["transaction"], value, note)
-        
+        if not error:
+            if answers["transaction"] == "Kontoöverföring":
+                t_account_num = input("Skriv in kontonummer att skicka till: ")
+                # Doing transactions between accounts
+                status, error = account_transfer(account_num,t_account_num,value,note)
+            else:
+                # Prompting user to choose a transaction type
+                questions = [ inquirer.List('currency', message=f"Vilken valuta ska {answers['transaction']} vara i?", choices=["SEK", "EUR", "USD", "NOK", "DKK"], ), ]
+                currency = inquirer.prompt(questions)  # Getting user's choice
+                # Doing personal transactions, to and from user 
+                status, error = transaction(account_num, answers["transaction"], value, note, currency["currency"])
+            
         if status: break
         print(error)
         time.sleep(3)
