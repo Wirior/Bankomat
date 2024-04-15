@@ -296,7 +296,7 @@ def transaction_history(account_num:str): # Den här måste också ändras för 
 
     return
 
-def new_account(user_id:str, account_type:str, currency:str):
+def new_account(user_id:str, account_type:str, currency:str, name:str):
     """Function to add a new account to an existing profile
     - Imports user id to append the new account number
     - Imports account type to create (determained by even or odd account number)
@@ -325,7 +325,8 @@ def new_account(user_id:str, account_type:str, currency:str):
 
     # Appening new Account data
     new_bank_data = [{
-        "currency":[currency],
+        "name": name, 
+        "currency": currency,
         "balance": [0],
         "transaction": [""],
         "date": [str(today)],
@@ -451,12 +452,11 @@ def Log_in():
         os.system('cls')
         print("Bankomat \n")
 
-        username = input("Användarnamn: ")  # Getting username from user
-        if username=="":
-            break
+        username = str(input("Användarnamn: ") or "0") # Getting username from user
+        if username == "0": return
         user_id = check_username(username) # Check if the username exists 
         if user_id: break
-
+        
         print("Användarnamnen som har skrivits in existerar inte")
         time.sleep(2)
     
@@ -498,10 +498,12 @@ def Log_in():
                 if account_num:
                     # Logged in on the account
                     while True:
+                        accounts_data = read_file(Path_Accounts)
+                        
                         os.system('cls')
                         print("Bankomat \n")
 
-                        print(f"Inloggad på: {account_num}")
+                        print(f"Inloggad på: {account_num}: {accounts_data[str(account_num)][0]['name']}\nSaldo: {accounts_data[str(account_num)][0]['balance'][0]} in {accounts_data[str(account_num)][0]['currency']}")
                         questions = [ inquirer.List('account', message="Välj interaktion", choices=['Genomför transaktion', 'Saldo historik', 'Transaktions historik', 'Byt konto'], ), ]
                         answers = inquirer.prompt(questions)  # Getting user's choice
 
@@ -524,8 +526,9 @@ def Log_in():
                 
                 questions = [inquirer.List('konto_valuta', message="Kontots valuta", choices=['SEK', 'USD', 'EUR', 'DKK', "NOK"],),] # Select type of currency for account
                 konto2 = inquirer.prompt(questions)  # Getting user's choice
+                name = input("Skiv ett namn för kontot: ")
 
-                account_list = new_account(user_id,konto["konto_typ"],konto2["konto_valuta"]) # Create a new account
+                account_list = new_account(user_id,konto["konto_typ"],konto2["konto_valuta"], name) # Create a new account
 
             elif answers["konto"] == 'Ta bort konto':
                 if not account_list: continue
