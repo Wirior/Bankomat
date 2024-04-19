@@ -35,9 +35,9 @@ from email_validator import validate_email, EmailNotValidError  # Importing emai
 """
 Remember to replace the file path with your location of the files and replace the \\(backslah) with / 
 """
-Path_Users = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
-Path_Passwords = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
-Path_Accounts = "C:/Users/William/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
+Path_Users = "H:/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
+Path_Passwords = "H:/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
+Path_Accounts = "H:/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
 
 today = date.today()  # Getting today's date
 
@@ -267,7 +267,7 @@ def new_account(user_id:str, account_type:str, currency:str, name:str):
     
     return account_list
 
-def get_accounts(user_id:str):
+def get_accounts(user_id:str, sort_type):
     """
     Creates lists of account id, type, currency and balance and returns them in a list.
     """
@@ -302,6 +302,32 @@ def get_accounts(user_id:str):
     combined = list(zip(name_list, account_list, type_list, balance_list, currency_list))
     combined.sort()
     name_list, account_list, type_list, balance_list, currency_list = zip(*combined)
+
+    if sort_type == 0:
+        combined = list(zip(name_list, account_list, type_list, balance_list, currency_list))
+        combined.sort()
+        name_list, account_list, type_list, balance_list, currency_list = zip(*combined)
+
+    elif sort_type == 1:
+        combined = list(zip(account_list, name_list, type_list, balance_list, currency_list))
+        combined.sort()
+        account_list, name_list, type_list, balance_list, currency_list = zip(*combined)
+
+    elif sort_type == 2:
+        combined = list(zip(type_list, account_list, name_list, balance_list, currency_list))
+        combined.sort()
+        type_list, account_list, name_list, balance_list, currency_list = zip(*combined)
+
+    elif sort_type == 3:
+        combined = list(zip(balance_list, name_list, account_list, type_list, currency_list))
+        combined.sort()
+        combined.reverse()
+        balance_list, name_list, account_list, type_list, currency_list = zip(*combined)
+
+    elif sort_type == 4:
+        combined = list(zip(currency_list, name_list, account_list, type_list, balance_list))
+        combined.sort()
+        currency_list, name_list, account_list, type_list, balance_list = zip(*combined)
 
     return name_list, account_list, type_list, balance_list, currency_list
 
@@ -338,12 +364,19 @@ def balance_history(accountnum:str): # Det finns något sätt att embed:a pyplot
         account_balance = val["balance"]
         account_date = val["date"]
     
-    balance = []
-    for index in reversed(account_balance): balance.append(index) # Reversed list of the dates
-    dates = []
-    for index in reversed(account_date): dates.append(index) # Reversed list of the dates
+    # balance = []
+    # for index in reversed(account_balance): balance.append(index) # Reversed list of the dates
+    # dates = []
+    # for index in reversed(account_date): dates.append(index) # Reversed list of the dates
+    
+    balance_dict = {}
+    for balances, dates in zip(reversed(account_balance), reversed(account_date)):
+        balance_dict[dates] = balances 
+    
+    date = list(balance_dict.keys())
+    balance = list(balance_dict.values())          
 
-    return balance, dates
+    return balance, date
 
 def get_history(accountnum:str, currency:str):
     """Function to create a list of all events in account
@@ -598,11 +631,26 @@ class Logged_In(Frame):
                                command= lambda: logout())
         button_create = Button(self, text='Skapa Konto',
                                command= lambda: self.create_account())
+        button_accountname = Button(self, text='Kontonamn', relief='solid', borderwidth=1, width=75, height=1, anchor='w', padx=5,
+                                    command= lambda: self.update_accounts(0))
+        button_accountid = Button(self, text='Konto-id', relief='solid', borderwidth=1, width=75, height=1, anchor='w', padx=5,
+                                  command= lambda: self.update_accounts(1))
+        button_accounttype = Button(self, text='Kontotyp', relief='solid', borderwidth=1, width=65, height=1, anchor='w', padx=5,
+                                    command= lambda: self.update_accounts(2))
+        button_accountbalance = Button(self, text='Saldo', relief='solid', borderwidth=1, width=20, height=1, anchor='e', padx=5,
+                                       command= lambda: self.update_accounts(3))
+        button_accountcurrency = Button(self, text='Valuta', relief='solid', borderwidth=1, width=45, height=1, anchor='w', padx=5,
+                                        command= lambda: self.update_accounts(4))
         
         frame_info.grid(column=0, row=0, sticky='w', columnspan=5)
         label_loggedtext.grid(column=0, row=0, sticky='w', pady=5)
         button_logout.grid(column=2, row=0, sticky='w')
         button_create.grid(column=5, row=0, sticky='e')
+        button_accountname.grid(column=0, row=1, columnspan=4, sticky='w')
+        button_accountid.grid(column=1, row=1, columnspan=4, sticky='w')
+        button_accounttype.grid(column=2, row=1, columnspan=4, sticky='w')
+        button_accountbalance.grid(column=3, row=1, sticky='e')
+        button_accountcurrency.grid(column=4, row=1, columnspan=4, sticky='e')
 
         self.columnconfigure(4, weight=1)
         self.rowconfigure(10, weight=1)
@@ -672,7 +720,7 @@ class Logged_In(Frame):
                     entry_name.delete(0, END)
                     option_type.pack()
                     option_currency.pack()
-                    self.update_accounts()
+                    self.update_accounts(0)
             
             elif entry_name.get() == '':
                 label_error_name.grid(column=2, row=0, sticky='e')
@@ -682,39 +730,39 @@ class Logged_In(Frame):
                 
             
 
-    def update_accounts(self):
+    def update_accounts(self, sort_type):
         self.clear()
-        account_list = get_accounts(self.controller.logged_userid)
+        account_list = get_accounts(self.controller.logged_userid, sort_type)
 
         self.buttons = []
         for i, name in enumerate(account_list[0]):
             button = Button(self, text=name, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
                             command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=0, row=(1+i), columnspan=4, sticky='w')
+            button.grid(column=0, row=(2+i), columnspan=4, sticky='w')
             self.buttons.append(button)
         
         for i, account in enumerate(account_list[1]):
             button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
                             command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=1, row=(1+i), columnspan=4, sticky='w')
+            button.grid(column=1, row=(2+i), columnspan=4, sticky='w')
             self.buttons.append(button)
 
         for i, type in enumerate(account_list[2]):
             button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
                             command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=2, row=(1+i), columnspan=4, sticky='w')
+            button.grid(column=2, row=(2+i), columnspan=4, sticky='w')
             self.buttons.append(button)          
 
         for i, balance in enumerate(account_list[3]):
             button = Button(self, text=balance, relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
                             command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=3, row=(1+i), sticky='e')
+            button.grid(column=3, row=(2+i), sticky='e')
             self.buttons.append(button)      
 
         for i, currency in enumerate(account_list[4]):
             button = Button(self, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
                             command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=4, row=(1+i), columnspan=4, sticky='e')
+            button.grid(column=4, row=(2+i), columnspan=4, sticky='e')
             self.buttons.append(button) 
 
             def switch_to(accountnum, i):
@@ -734,7 +782,7 @@ class Logged_In(Frame):
 
     def tkraise(self, aboveThis=None):
         self.update_user()
-        self.update_accounts()
+        self.update_accounts(0)
         super().tkraise(aboveThis)
 
 class Account(Frame):
@@ -833,7 +881,7 @@ class Account(Frame):
                 'Välj Konto'
             ]
 
-            accounts = get_accounts(self.controller.logged_userid)
+            accounts = get_accounts(self.controller.logged_userid, 0)
             for i, account in enumerate(accounts[0]):
                 if i != self.controller.logged_i:
                     new_account = str(account).strip("[']")
@@ -872,7 +920,7 @@ class Account(Frame):
                 if clicked_account.get() != 'Välj Konto' and value < accounts[3][self.controller.logged_i]:
                     account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'))
                     label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
-                    self.update_account()
+                    self.update_account(0)
 
                 else:
                     label_choose.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
@@ -881,8 +929,8 @@ class Account(Frame):
             self.clear()
             balance, dates = balance_history(self.controller.logged_accountnum)
             title = {'family':'sans-serif','color':'black','size':14}
-            fig = Figure(figsize=(4, 2))
-            fig.subplots_adjust(left=0.18, right=0.9, top=0.86, bottom=0.22)
+            fig = Figure(figsize=(4, 2.5))
+            fig.subplots_adjust(left=0.18, right=0.9, top=0.86, bottom=0.30)
             fig.tight_layout()
             ax = fig.add_subplot(111)
             
@@ -890,6 +938,10 @@ class Account(Frame):
             ax.set_xlabel('Datum')
             ax.set_ylabel('Belopp ' + self.currency)
             ax.set_title(f"{str(self.controller.logged_accountnum)}: Saldo Historik",loc= 'left',fontdict=title)
+            
+            for label in ax.get_xticklabels():
+                label.set_rotation(30)
+                label.set_fontsize(8)
             
             canvas = FigureCanvasTkAgg(fig, master=self.frame)
             canvas.draw()
@@ -943,8 +995,8 @@ class Account(Frame):
         self.frame = Frame(self, borderwidth=1, relief='solid')
         self.frame.grid(column=2, row=2, rowspan=10, sticky='n')        
 
-    def update_account(self):
-        accounts = get_accounts(self.controller.logged_userid)
+    def update_account(self, sort_type):
+        accounts = get_accounts(self.controller.logged_userid, sort_type)
         balance = accounts[3][self.controller.logged_i]
         currency = accounts[4][self.controller.logged_i]
         self.currency = currency[0]
@@ -953,7 +1005,7 @@ class Account(Frame):
 
     def tkraise(self, aboveThis=None):
         self.clear()
-        self.update_account()
+        self.update_account(0)
         super().tkraise(aboveThis)
         
 class Admin(Frame):
