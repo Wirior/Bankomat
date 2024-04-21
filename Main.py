@@ -35,9 +35,9 @@ from email_validator import validate_email, EmailNotValidError  # Importing emai
 """
 Remember to replace the file path with your location of the files and replace the \\(backslah) with / 
 """
-Path_Users = "H:/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
-Path_Passwords = "H:/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
-Path_Accounts = "H:/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
+Path_Users = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
+Path_Passwords = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
+Path_Accounts = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
 
 today = date.today()  # Getting today's date
 
@@ -364,11 +364,6 @@ def balance_history(accountnum:str): # Det finns något sätt att embed:a pyplot
         account_balance = val["balance"]
         account_date = val["date"]
     
-    # balance = []
-    # for index in reversed(account_balance): balance.append(index) # Reversed list of the dates
-    # dates = []
-    # for index in reversed(account_date): dates.append(index) # Reversed list of the dates
-    
     balance_dict = {}
     for balances, dates in zip(reversed(account_balance), reversed(account_date)):
         balance_dict[dates] = balances 
@@ -398,6 +393,34 @@ def get_history(accountnum:str, currency:str):
     amount_list.append('')
         
     return amount_list, transaction_list, date_list, note_list
+
+def delete_account(account_num:str, password:str):
+    """Function to safly dispose of any unwanted accounts
+    - Imports account number to find account
+    - Imports password to verify the deletion
+    - Returns account_list + error message if incorrect password or balance != 0
+    - Returns account_list + 0 if successfull
+    """
+    passwords_data = read_file(Path_Passwords)
+    accounts_data = read_file(Path_Accounts)
+
+    for count, val in enumerate(passwords_data["password"]):
+        account_list = val["account"]
+        if account_num in val["account"]: break
+    
+    if not (val["psw"] == password): return False , "Fel lösenord, kontot var inte borttaget"
+
+    # Get data from json
+    for val in accounts_data[str(account_num)]:
+        account_balance = val["balance"]
+    if not (account_balance[0] == 0): return None , "Kontot får inte inneha något belopp, töm kontor först eller betala av skulden"
+
+    account_list.remove(account_num) # Remove account number from password.json file
+    accounts_data.pop(str(account_num)) # Remove the whole account from accounts.json
+
+    write_file(filepath=Path_Passwords, data=passwords_data, indent= 4)
+    write_file(Path_Accounts, accounts_data, 4)
+    return True, "Kontot har tagits bort"
 
 # def transaction_history(accountnum:str): # Den här måste också ändras för att skriva ut all data nu är det bara print
 #     """Function to itterate through the account history displaying it
@@ -727,8 +750,7 @@ class Logged_In(Frame):
 
             else:
                 label_error.grid(column=2, row=0, sticky='e')
-                
-            
+                            
 
     def update_accounts(self, sort_type):
         self.clear()
@@ -810,6 +832,8 @@ class Account(Frame):
                                     command= lambda: set_transfer())
         button_history = Button(self, text='Visa Transaktioner',
                                 command= lambda: show_history())
+        button_delete = Button(self, text='Ta Bort Konto',
+                               command= lambda: set_delete())
                 
         label.grid(column=0, row=0, pady=5)
         self.label_accountnum.grid(column=1, row=0, padx=5)
@@ -820,7 +844,9 @@ class Account(Frame):
         button_transaction.grid(column=0, row=3, sticky='w', padx=5)
         button_show.grid(column=0, row=4, sticky='w', padx=5, pady=5)
         button_history.grid(column=0, row=5, sticky='w', padx=5, columnspan=2)
+        button_delete.grid(column=0, row=6, sticky='w', padx=5, pady=5, columnspan=2)
         self.frame.grid(column=2, row=2, rowspan=10, sticky='wn', columnspan=3)
+
 
         self.columnconfigure(2, weight=1)
         self.rowconfigure(10, weight=1)
@@ -855,7 +881,7 @@ class Account(Frame):
                     label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
                     entry_amount.delete(0, END)
                     textbox_note.delete('1.0', END)
-                    self.update_account()
+                    self.update_account(0)
 
 
                 except:
@@ -990,6 +1016,47 @@ class Account(Frame):
             for listbox in listboxes: # Binds MouseWheel to function giving it control over listboxes
                 listbox.bind('<MouseWheel>', on_mousewheel)                        
         
+        def set_delete():
+            self.clear()
+            label_delete = Label(self.frame, text='Radera Konto:')
+            label_warning = Label(self.frame, text='Detta går inte att ångra!', font=('Courier', 8))
+            label_message = Label(self.frame, text='')
+            label_pin = Label(self.frame, text='Lösenord:')
+            entry_pin = Entry(self.frame, cursor='xterm')
+            button_confirm = Button(self.frame, text='Bekräfta',
+                                    command= lambda: delete())
+
+            
+            label_delete.grid(column=0, row=0, sticky='w', padx=5, pady=2)
+            label_warning.grid(column=0, row=1, sticky='w', padx=5, columnspan=3)
+            label_message.grid(column=0, row=2, sticky='w', padx=5, columnspan=3)
+            label_pin.grid(column=0, row=3, sticky='w', padx=5, pady=5)
+            entry_pin.grid(column=1, row=3, sticky='w')
+            button_confirm.grid(column=2, row=3, sticky='w', padx=5)
+            
+            def delete():
+                button_confirm.config(text='Är du säker?', command= lambda: delete_confirm())
+
+            def delete_confirm():
+                result = delete_account(self.controller.logged_accountnum, entry_pin.get())
+
+                if result[0] == False:
+                    label_message.config(text='Fel lösenord, kontot har inte tagits bort', fg='red')
+                    self.after(500, lambda: reset())
+
+                elif result[0] == None:
+                    label_message.config(text='Kontot måste tömmas innan det kan raderas', fg='red')
+                    self.after(500, lambda: reset())
+
+                elif result[0] == True:
+                    label_message.config(text='Kontot har tagits bort', fg='lime green')
+                    self.after(1000, lambda: controller.show_frame('Logged_In'))
+
+            def reset():
+                button_confirm.config(text='Bekräfta', command= lambda: delete())
+                # label_message.config(text='')
+                entry_pin.delete(0, END)
+
     def clear(self):
         self.frame.destroy()
         self.frame = Frame(self, borderwidth=1, relief='solid')
