@@ -422,31 +422,33 @@ def delete_account(account_num:str, password:str):
     write_file(Path_Accounts, accounts_data, 4)
     return True, "Kontot har tagits bort"
 
-# def transaction_history(accountnum:str): # Den här måste också ändras för att skriva ut all data nu är det bara print
-#     """Function to itterate through the account history displaying it
-#     - Imports account number to read the files
-#     """
-#     accounts_data = read_file(Path_Accounts)
-    
-#     # Print the information in the desired format
-#     print("{0:<20} | {1:<18} | {2:<16} | {3:<30}\n"
-#               .format("Saldo", "Transaktion", "Datum", "Anteckning"))
-#     # Itterates through the accounts json data, and prints out each element in order.
-#     for item in range(len(accounts_data[str(accountnum)][0]['balance'])):
-#         balance = accounts_data[str(accountnum)][0]['balance'][item]
-#         transaction = accounts_data[str(accountnum)][0]['transaction'][item]
-#         date = accounts_data[str(accountnum)][0]['date'][item]
-#         note = accounts_data[str(accountnum)][0]['note'][item]
-        
-#         print("{0:<20} | {1:<18} | {2:<16} | {3:<30}"
-#               .format(balance, transaction, date, note, item))
-        
-#         if item >= 30: # Check if the item is equal to or larger than 30, if so: stop printing
-#             print("Kunde endast ladda in de senaste 30 transaktionerna")
-#             break
-#     input("Tryck enter för att fortsätta") # Remove this if needed
+def currency_exchange(amount:str, source_currency:str, target_currency:str, type:str):
+    """Functio do do currency exchange from a given value.
+    - Imports account number
+    - Imports amount to be exchanged
+    - Imports the targeted currency
+    - Returns the same value if the currency is the same
+    - Returns False + error i the currency is not supported
+    - Returns the transformed value based on the exchange rates
+    """
 
-#     return
+    # Check if the target currency is the same as currency.
+    if source_currency == target_currency: return abs(float(amount))
+    
+    # There are 5 exchange rates. From the 5 different currencies to the corresponding value in the target currency. The amount should be multiplied by this factor later.
+    exchange_rates = {"SEK": {"USD": 0.12, "EUR": 0.11, "DKK": 0.84, "NOK": 1.32},
+                      "USD": {"SEK": 8.69, "EUR": 0.91, "DKK": 6.76, "NOK": 10.56},
+                      "EUR": {"SEK": 9.18, "USD": 1.10, "DKK": 7.43, "NOK": 11.62},
+                      "DKK": {"SEK": 1.19, "USD": 0.15, "EUR": 0.13, "NOK": 1.57},
+                      "NOK": {"SEK": 0.76, "USD": 0.09, "EUR": 0.086, "DKK": 0.64}}
+    
+    # Calculate the equivalent value in the target currency from the amount to be exchanged. 
+    exchanged_amount = float(amount) * exchange_rates[target_currency][source_currency]
+
+    return exchanged_amount
+
+
+#####################################
 
 
 class Application(Tk): # Creates main application that the UI is located in
@@ -709,25 +711,29 @@ class Logged_In(Frame):
             'EUR'
         ]
 
-        frame_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
-        frame_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w', columnspan=2)
-        
+        # frame_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
+        # frame_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w', columnspan=2)
+
+        style = ttk.Style()
+        style.theme_use('clam')
+        style.configure('custom.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=3)
+        style.map('custom.TMenubutton', background=[('active', 'light gray')])
+
         clicked_type = StringVar()
         clicked_type.set('Välj Kontotyp')
         clicked_currency = StringVar()
         clicked_currency.set('Välj Valuta')
-        option_type = ttk.OptionMenu(frame_type, clicked_type, *options_type)
-        option_type.config(width=12, style='TMenubutton')
-        option_currency = ttk.OptionMenu(frame_currency, clicked_currency, *options_currency)
-        option_currency.config(width=10, style='TMenubutton')
+        option_type = ttk.OptionMenu(create_window, clicked_type, *options_type)
+        option_type.config(width=12, style='custom.TMenubutton')
+        option_currency = ttk.OptionMenu(create_window, clicked_currency, *options_currency)
+        option_currency.config(width=10, style='custom.TMenubutton')
         
-        style = ttk.Style()
-        style.configure('TMenuButton')
+
 
         label_name.grid(column=0, row=0, padx=5, sticky='w')
         entry_name.grid(column=1, row=0, sticky='w')
-        option_type.pack()
-        option_currency.pack()
+        option_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
+        option_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w', columnspan=2)
         button_create.grid(column=2, row=1)
 
         create_window.columnconfigure(2, weight=1)
@@ -754,43 +760,47 @@ class Logged_In(Frame):
 
     def update_accounts(self, sort_type):
         self.clear()
-        account_list = get_accounts(self.controller.logged_userid, sort_type)
+        try:
+            account_list = get_accounts(self.controller.logged_userid, sort_type)
 
-        self.buttons = []
-        for i, name in enumerate(account_list[0]):
-            button = Button(self, text=name, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=0, row=(2+i), columnspan=4, sticky='w')
-            self.buttons.append(button)
-        
-        for i, account in enumerate(account_list[1]):
-            button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=1, row=(2+i), columnspan=4, sticky='w')
-            self.buttons.append(button)
+            self.buttons = []
+            for i, name in enumerate(account_list[0]):
+                button = Button(self, text=name, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                                command= lambda i=i: switch_to(account_list[1][i], i))
+                button.grid(column=0, row=(2+i), columnspan=4, sticky='w')
+                self.buttons.append(button)
+            
+            for i, account in enumerate(account_list[1]):
+                button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                                command= lambda i=i: switch_to(account_list[1][i], i))
+                button.grid(column=1, row=(2+i), columnspan=4, sticky='w')
+                self.buttons.append(button)
 
-        for i, type in enumerate(account_list[2]):
-            button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=2, row=(2+i), columnspan=4, sticky='w')
-            self.buttons.append(button)          
+            for i, type in enumerate(account_list[2]):
+                button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
+                                command= lambda i=i: switch_to(account_list[1][i], i))
+                button.grid(column=2, row=(2+i), columnspan=4, sticky='w')
+                self.buttons.append(button)          
 
-        for i, balance in enumerate(account_list[3]):
-            button = Button(self, text=balance, relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=3, row=(2+i), sticky='e')
-            self.buttons.append(button)      
+            for i, balance in enumerate(account_list[3]):
+                button = Button(self, text=balance, relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
+                                command= lambda i=i: switch_to(account_list[1][i], i))
+                button.grid(column=3, row=(2+i), sticky='e')
+                self.buttons.append(button)      
 
-        for i, currency in enumerate(account_list[4]):
-            button = Button(self, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
-                            command= lambda i=i: switch_to(account_list[1][i], i))
-            button.grid(column=4, row=(2+i), columnspan=4, sticky='e')
-            self.buttons.append(button) 
+            for i, currency in enumerate(account_list[4]):
+                button = Button(self, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
+                                command= lambda i=i: switch_to(account_list[1][i], i))
+                button.grid(column=4, row=(2+i), columnspan=4, sticky='e')
+                self.buttons.append(button) 
+            
+        except: 
+            None
 
-            def switch_to(accountnum, i):
-                self.controller.logged_accountnum = accountnum
-                self.controller.logged_i = i
-                self.controller.show_frame('Account')       
+        def switch_to(accountnum, i):
+            self.controller.logged_accountnum = accountnum
+            self.controller.logged_i = i
+            self.controller.show_frame('Account')       
 
     def clear(self):        
         try:
@@ -855,37 +865,58 @@ class Account(Frame):
             self.clear()
             label_deposit = Label(self.frame, text=type + ':')
             label_note = Label(self.frame, text='Anteckning:')
-            label_currency = Label(self.frame, text=self.currency)
-            button_confirm = Button(self.frame, text='Godkänn')
+            button_confirm = Button(self.frame, text='Godkänn',
+                                    command= lambda: trans(type))
             entry_amount = Entry(self.frame, cursor='xterm')
             textbox_note = Text(self.frame, cursor='xterm', width=33, height=5)
-            label_success = Label(self.frame, text=type + ' lyckades', fg='lime green')
-            label_error = Label(self.frame, text=type + ' måste vara ett nummer', fg='red')
-            button_confirm.config(command= lambda: trans(type))
+            label_message = Label(self.frame, text='')
+
+            options_currency = [
+                'SEK',
+                'USD',
+                'EUR',
+                'DKK',
+                'NOK'
+            ]
+
+            style = ttk.Style()
+            style.theme_use('clam')
+            style.configure('custom.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=3)
+            style.map('custom.TMenubutton', background=[('active', 'light gray')])
+
+            clicked_currency = StringVar()
+            option_currency = ttk.OptionMenu(self.frame, clicked_currency, self.currency, *options_currency)
+            option_currency.config(style='custom.TMenubutton', width=5)
+
 
             label_deposit.grid(column=0, row=0, sticky='w', padx=5, pady=5)
             entry_amount.grid(column=0, row=1, sticky='w', padx=5, columnspan=2)
-            label_currency.grid(column=2, row=1, sticky='w')
+            option_currency.grid(column=2, row=1, sticky='w')
             label_note.grid(column=0, row=3, sticky='w', padx=5)
             textbox_note.grid(column=0, row=4, sticky='w', columnspan=4, padx=5, pady=5)
             button_confirm.grid(column=3, row=1, padx=5, sticky='e')
+            label_message.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
 
             self.frame.columnconfigure(3, weight=1)
 
-            def trans(type:str):
-                label_error.grid_forget()
-                label_success.grid_forget()
-                try:
-                    value = float(entry_amount.get())
-                    transaction(self.controller.logged_accountnum, type, value, textbox_note.get('1.0', 'end-1c'))
-                    label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
-                    entry_amount.delete(0, END)
-                    textbox_note.delete('1.0', END)
-                    self.update_account(0)
 
+            def trans(type:str):
+                
+                try:
+                    value = currency_exchange(entry_amount.get(), self.currency, clicked_currency.get(), type)
+                    
+                    if value <= self.balance or type == 'Insättning':
+                        transaction(self.controller.logged_accountnum, type, value, textbox_note.get('1.0', 'end-1c'))
+                        label_message.config(text=type + ' lyckades', fg='lime green')
+                        entry_amount.delete(0, END)
+                        textbox_note.delete('1.0', END)
+                        self.update_account(0)
+                    
+                    else:
+                        label_message.config(text='Uttag måste vara mindre än saldo', fg='red')
 
                 except:
-                    label_error.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
+                    label_message.config(text=type + ' måste vara ett belopp', fg='red')
 
         def set_transfer():
             self.clear()
@@ -893,19 +924,23 @@ class Account(Frame):
             label_account = Label(self.frame, text=self.controller.logged_accountnum, borderwidth=1, relief='solid')
             label_to = Label(self.frame, text='Till')
             label_note = Label(self.frame, text='Anteckning:')
-            label_error = Label(self.frame, text='Överföring måste vara ett nummer', fg='red')
+            label_error = Label(self.frame, text='Överföring måste vara ett belopp', fg='red')
             label_choose = Label(self.frame, text='Välj ett konto', fg='red')
             label_success = Label(self.frame, text='Överföring Lyckades', fg='lime green')
             label_currency = Label(self.frame, text=self.currency)
-            frame_accounts = Frame(self.frame, borderwidth=1, relief='solid')
             button_confirm = Button(self.frame, text='Godkänn',
                                     command= lambda: transfer())
             entry_amount = Entry(self.frame, cursor='xterm')
             textbox_note = Text(self.frame, cursor='xterm', width=33, height=5)
 
-            option_accounts = [
-                'Välj Konto'
-            ]
+            option_accounts = []
+
+            style = ttk.Style()
+            style.theme_use('clam')
+            style.configure('custom.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=3)
+            style.map('custom.TMenubutton', background=[('active', 'light gray')])
+            style.configure('label.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=0, arrowpadding=0)
+            style.map('label.TMenubutton', background=[('active', 'white')])            
 
             accounts = get_accounts(self.controller.logged_userid, 0)
             for i, account in enumerate(accounts[0]):
@@ -914,20 +949,24 @@ class Account(Frame):
                     option_accounts.append(new_account + ': ' + str(accounts[1][i]))
             
             clicked_account = StringVar()
-            clicked_account.set('Välj Konto')
-            option_accounts = ttk.OptionMenu(frame_accounts, clicked_account, *option_accounts)
-            option_accounts.config(width=10)
+            option_accounts = ttk.OptionMenu(self.frame, clicked_account, 'Välj Konto', *option_accounts)
+            option_accounts.config(width=15, style='custom.TMenubutton')
+            current_account = StringVar()
+            current_currency = StringVar()
+            label_account = ttk.OptionMenu(self.frame, current_account, self.controller.logged_accountnum)
+            label_account.config(width=6, style='label.TMenubutton')
+            label_currency = ttk.OptionMenu(self.frame, current_currency, self.currency)
+            label_currency.config(width=4, style='label.TMenubutton')
 
             label_transfer.grid(column=0, row=0, sticky='w', columnspan=3, padx=5)
-            label_account.grid(column=0, row=1, pady=5, sticky='e', padx=5)
+            label_account.grid(column=0, row=1, pady=5, sticky='w', padx=5)
             label_to.grid(column=1, row=1, padx=5, sticky='w')
-            label_note.grid(column=0, row=3, sticky='w', padx=5)
-            label_currency.grid(column=1, row=2, sticky='w', padx=5)
-            frame_accounts.grid(column=2, row=1, sticky='w')
+            label_note.grid(column=0, row=3, sticky='w', padx=5, columnspan=3)
+            label_currency.grid(column=3, row=2, sticky='w', padx=5)
             textbox_note.grid(column=0, row=4, sticky='w', columnspan=4, padx=5, pady=5)
-            option_accounts.pack()
-            entry_amount.grid(column=0, row=2, sticky='w', padx=5, pady=5)
-            button_confirm.grid(column=2, row=2, sticky='e', padx=5)
+            option_accounts.grid(column=2, row=1, sticky='w', columnspan=10)
+            entry_amount.grid(column=0, row=2, sticky='w', padx=5, pady=5, columnspan=3)
+            button_confirm.grid(column=3, row=2, sticky='e', padx=5)
 
             self.frame.columnconfigure(3, weight=1)
 
@@ -943,7 +982,7 @@ class Account(Frame):
                     label_error.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
                     return
 
-                if clicked_account.get() != 'Välj Konto' and value < accounts[3][self.controller.logged_i]:
+                if clicked_account.get() != 'Välj Konto' and value < self.balance:
                     account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'))
                     label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
                     self.update_account(0)
@@ -1003,15 +1042,16 @@ class Account(Frame):
             for i in note_list:
                 listbox_history_note.insert(END, i)
             listbox_history_note.grid(column=3, row=1, sticky='nswe')
-
-            def on_mousewheel(event): # Makes the user able to control all listboxes at the same time with their mousewheel
-                for listbox in listboxes:
-                    listbox.yview_scroll(-1*event.delta//120, 'units')
                     
             label_date.grid(column=0, row=0, sticky='nswe')
             label_transaction.grid(column=1, row=0, sticky='nswe')
             label_amount.grid(column=2, row=0, sticky='nswe')
             label_note.grid(column=3, row=0, sticky='nswe')
+
+            def on_mousewheel(event): # Makes the user able to control all listboxes at the same time with their mousewheel
+                for listbox in listboxes:
+                    listbox.yview_scroll(-1*event.delta//120, 'units')   
+                return 'break'         
             
             for listbox in listboxes: # Binds MouseWheel to function giving it control over listboxes
                 listbox.bind('<MouseWheel>', on_mousewheel)                        
@@ -1064,10 +1104,10 @@ class Account(Frame):
 
     def update_account(self, sort_type):
         accounts = get_accounts(self.controller.logged_userid, sort_type)
-        balance = accounts[3][self.controller.logged_i]
+        self.balance = accounts[3][self.controller.logged_i]
         currency = accounts[4][self.controller.logged_i]
         self.currency = currency[0]
-        self.label_balance.config(text='Saldo: ' + str(balance) + ' ' + str(self.currency))
+        self.label_balance.config(text='Saldo: ' + str(self.balance) + ' ' + str(self.currency))
         self.label_accountnum.config(text=self.controller.logged_accountnum)
 
     def tkraise(self, aboveThis=None):
