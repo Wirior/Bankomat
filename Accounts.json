@@ -131,6 +131,8 @@
          ],
          "balance": [
             900.0,
+            50000000900.0,
+            900.0,
             909.18,
             900.0,
             909.18,
@@ -159,6 +161,8 @@
          ],
          "transaction": [
             "Uttag",
+            "Ins\u00e4ttning",
+            "Uttag",
             "Konto\u00f6verf\u00f6ring",
             "Konto\u00f6verf\u00f6ring",
             "Konto\u00f6verf\u00f6ring",
@@ -186,6 +190,8 @@
             ""
          ],
          "date": [
+            "2024-04-22",
+            "2024-04-22",
             "2024-04-22",
             "2024-04-22",
             "2024-04-22",
@@ -229,6 +235,8 @@
             "",
             "",
             "",
+            "",
+            "",
             "Swisherino",
             "Swish",
             "",
@@ -237,66 +245,6 @@
             "",
             "",
             "",
-            "",
-            "",
-            "Konto skapades"
-         ]
-      }
-   ],
-   "964552": [
-      {
-         "name": [
-            "Society"
-         ],
-         "currency": [
-            "EUR"
-         ],
-         "balance": [
-            101.0,
-            100.0,
-            0
-         ],
-         "transaction": [
-            "Konto\u00f6verf\u00f6ring",
-            "Konto\u00f6verf\u00f6ring",
-            ""
-         ],
-         "date": [
-            "2024-04-22",
-            "2024-04-14",
-            "2024-04-14"
-         ],
-         "note": [
-            "",
-            "",
-            "Konto skapades"
-         ]
-      }
-   ],
-   "774692": [
-      {
-         "name": [
-            "Konto"
-         ],
-         "currency": [
-            "SEK"
-         ],
-         "balance": [
-            909.82,
-            1.0,
-            0
-         ],
-         "transaction": [
-            "Ins\u00e4ttning",
-            "Ins\u00e4ttning",
-            ""
-         ],
-         "date": [
-            "2024-04-22",
-            "2024-04-22",
-            "2024-04-14"
-         ],
-         "note": [
             "",
             "",
             "Konto skapades"
@@ -539,10 +487,10 @@
          ]
       }
    ],
-   "588402": [
+   "782327": [
       {
          "name": [
-            "Hej"
+            "Wow"
          ],
          "currency": [
             "SEK"

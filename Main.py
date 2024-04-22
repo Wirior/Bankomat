@@ -183,10 +183,10 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str, source
         # Checking if accounts are savings accounts
     if (int(transfer_num) % 2) == 0:
         if not check_days_passed(t_account_date[0], days_passed= days_lock_account): # Calculate if a set number of days passed since last event on account
-            return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar efter senaste händeslse"
+            return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar\n efter senaste händeslse"
     if (int(account_num) % 2) == 0: 
         if not check_days_passed(account_date[0], days_passed= days_lock_account):
-            return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar efter senaste händeslse"
+            return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar\n efter senaste händeslse"
 
 
     # Adding the new transaction data to the account
@@ -487,6 +487,7 @@ class Application(Tk): # Creates main application that the UI is located in
         self.logged_accounts = None
         self.logged_username = None
         self.logged_accountnum = None
+        self.logged_sorttype = None
         self.logged_i = None
         
         container = Frame(self)
@@ -673,6 +674,7 @@ class Logged_In(Frame):
         self.logged_username = self.controller.logged_username
         self.logged_userid = self.controller.logged_userid
         self.logged_accountnum = self.controller.logged_accountnum
+        self.logged_sorttype = self.controller.logged_sorttype
         self.logged_i = self.controller.logged_i
         frame_info = Frame(self)
         label_loggedtext = Label(frame_info, text='Inloggad som:')
@@ -723,19 +725,17 @@ class Logged_In(Frame):
                                command= lambda: create())
         
         options_type = [
-            'Välj Kontotyp',
-            'Sparkonto',
-            'Betalkonto'
+            'Betalkonto',
+            'Sparkonto'
         ]
 
         options_currency = [
-            'Välj Valuta',
             'SEK',
-            'EUR'
+            'USD',
+            'EUR',
+            'DKK',
+            'NOK'
         ]
-
-        # frame_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
-        # frame_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w', columnspan=2)
 
         style = ttk.Style()
         style.theme_use('clam')
@@ -743,12 +743,10 @@ class Logged_In(Frame):
         style.map('custom.TMenubutton', background=[('active', 'light gray')])
 
         clicked_type = StringVar()
-        clicked_type.set('Välj Kontotyp')
         clicked_currency = StringVar()
-        clicked_currency.set('Välj Valuta')
-        option_type = ttk.OptionMenu(create_window, clicked_type, *options_type)
+        option_type = ttk.OptionMenu(create_window, clicked_type, 'Välj Kontotyp', *options_type)
         option_type.config(width=12, style='custom.TMenubutton')
-        option_currency = ttk.OptionMenu(create_window, clicked_currency, *options_currency)
+        option_currency = ttk.OptionMenu(create_window, clicked_currency, 'Välj Valuta', *options_currency)
         option_currency.config(width=10, style='custom.TMenubutton')
         
 
@@ -789,39 +787,40 @@ class Logged_In(Frame):
             self.buttons = []
             for i, name in enumerate(account_list[0]):
                 button = Button(self, text=name, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], i))
+                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
                 button.grid(column=0, row=(2+i), columnspan=4, sticky='w')
                 self.buttons.append(button)
             
             for i, account in enumerate(account_list[1]):
                 button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], i))
+                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
                 button.grid(column=1, row=(2+i), columnspan=4, sticky='w')
                 self.buttons.append(button)
 
             for i, type in enumerate(account_list[2]):
                 button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], i))
+                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
                 button.grid(column=2, row=(2+i), columnspan=4, sticky='w')
                 self.buttons.append(button)          
 
             for i, balance in enumerate(account_list[3]):
                 button = Button(self, text=balance, relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], i))
+                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
                 button.grid(column=3, row=(2+i), sticky='e')
                 self.buttons.append(button)      
 
             for i, currency in enumerate(account_list[4]):
                 button = Button(self, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], i))
+                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
                 button.grid(column=4, row=(2+i), columnspan=4, sticky='e')
                 self.buttons.append(button) 
             
         except: 
             None
 
-        def switch_to(accountnum, i):
+        def switch_to(accountnum, sort_type, i):
             self.controller.logged_accountnum = accountnum
+            self.controller.logged_sorttype = sort_type
             self.controller.logged_i = i
             self.controller.show_frame('Account')       
 
@@ -847,6 +846,7 @@ class Account(Frame):
         self.controller = controller
         self.logged_accountnum = self.controller.logged_accountnum
         self.logged_userid = self.controller.logged_userid
+        self.logged_sorttype = self.controller.logged_sorttype
         self.logged_i = self.controller.logged_i
 
         self.frame = Frame(self, borderwidth=1, relief='solid')
@@ -933,7 +933,7 @@ class Account(Frame):
                         label_message.config(text=type + ' lyckades', fg='lime green')
                         entry_amount.delete(0, END)
                         textbox_note.delete('1.0', END)
-                        self.update_account(0)
+                        self.update_account(self.sorttype)
                     
                     else:
                         label_message.config(text='Uttag måste vara mindre än saldo', fg='red')
@@ -980,9 +980,9 @@ class Account(Frame):
             label_currency.config(width=4, style='label.TMenubutton')
 
             label_transfer.grid(column=0, row=0, sticky='w', columnspan=3, padx=5)
+            label_error.grid(column=0, row=1, sticky='w', padx=5, columnspan=10)
             label_account.grid(column=0, row=2, pady=5, sticky='w', padx=5)
-            label_error.grid(column=0, row=2, sticky='w', padx=5, columnspan=3)
-            label_to.grid(column=1, row=1, padx=5, sticky='w')
+            label_to.grid(column=1, row=2, padx=5, sticky='w')
             label_note.grid(column=0, row=4, sticky='w', padx=5, columnspan=3)
             label_currency.grid(column=3, row=3, sticky='w', padx=5)
             textbox_note.grid(column=0, row=5, sticky='w', columnspan=4, padx=5, pady=5)
@@ -1005,7 +1005,7 @@ class Account(Frame):
                     error, text = account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'), self.currency)
                     if error: 
                         label_error.config(text='Överföring lyckades', fg='lime green')
-                        self.update_account(0)
+                        self.update_account(self.sorttype)
 
                     elif error == False:
                         label_error.config(text=text, fg='red')
@@ -1137,8 +1137,9 @@ class Account(Frame):
         self.label_accountnum.config(text=self.controller.logged_accountnum)
 
     def tkraise(self, aboveThis=None):
+        self.sorttype = self.controller.logged_sorttype
         self.clear()
-        self.update_account(0)
+        self.update_account(self.sorttype)
         super().tkraise(aboveThis)
         
 class Admin(Frame):
