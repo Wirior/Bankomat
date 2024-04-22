@@ -22,7 +22,7 @@ text_admin = R"""
 import os  # Importing the os module to interact with the operating system
 import time  # Importing the time module for time-related functions
 import json  # Importing the json module for JSON file operations
-from datetime import date  # Importing the date class from the datetime module
+from datetime import date, datetime, timedelta  # Importing the date class from the datetime module
 import random # Importing random function for slump actions
 import matplotlib.pyplot as plt # importing pylot module to plot grapths
 from matplotlib.figure import Figure
@@ -40,6 +40,8 @@ Path_Passwords = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Passwor
 Path_Accounts = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
 
 today = date.today()  # Getting today's date
+
+days_lock_account = 15
 
 def read_file(filepath:str):
     """Fuction to read a json file and return a dump of json.
@@ -148,7 +150,7 @@ def transaction(accountnum:str, type:str, amount, note:str):
 
     write_file(Path_Accounts,Accounts_data,4)
 
-def account_transfer(accountnum:str, transfer_num:str, amount, note:str, source_currency:str):
+def account_transfer(account_num:str, transfer_num:str, amount, note:str, source_currency:str):
     """Function to write a transaction too and from your account.
     - Imports the amount to be moved
     - Imports a note made by the user
@@ -157,31 +159,14 @@ def account_transfer(accountnum:str, transfer_num:str, amount, note:str, source_
     """
     # Get data from json file
     Accounts_data = read_file(Path_Accounts)
-    for val in Accounts_data[str(accountnum)]:
+    for val in Accounts_data[str(account_num)]:
         account_balance = val["balance"]
         account_transaction = val["transaction"]
         account_date = val["date"]
         account_note = val["note"]
-    
-    # if isinstance(amount, (int, float)):  # pass tuple
-    #     return False, "Strängar kan inte matas in"
 
-    # Trying to find the inputed account number
-    trigger = True
-    for val in Accounts_data: # Itterating through Accounts.json 
-        if val == transfer_num and (val != str(accountnum)):
-            trigger = False
-            break  
-    if trigger: False, "Kontonumret fanns inte att föra över till"
-
-    remove_balance = account_balance[0] - abs(float(amount))
-    removed_balance = round(remove_balance, 2)
-
-    # Adding the new transaction data to the account
-    account_balance.insert(0, removed_balance)
-    account_transaction.insert(0, "Kontoöverföring")
-    account_date.insert(0, str(today))
-    account_note.insert(0, note)
+        remove_balance = account_balance[0] - abs(float(amount))
+        removed_balance = round(remove_balance, 2)
     
     # Itterating through the Transfer Accounts data
     for val in Accounts_data[str(transfer_num)]: # Read the new account
@@ -195,6 +180,21 @@ def account_transfer(accountnum:str, transfer_num:str, amount, note:str, source_
         add_balance = t_account_balance[0] + exchanged_amount
         added_balance = round(add_balance, 2)
     
+        # Checking if accounts are savings accounts
+    if (int(transfer_num) % 2) == 0:
+        if not check_days_passed(t_account_date[0], days_passed= days_lock_account): # Calculate if a set number of days passed since last event on account
+            return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar efter senaste händeslse"
+    if (int(account_num) % 2) == 0: 
+        if not check_days_passed(account_date[0], days_passed= days_lock_account):
+            return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar efter senaste händeslse"
+
+
+    # Adding the new transaction data to the account
+    account_balance.insert(0, removed_balance)
+    account_transaction.insert(0, "Kontoöverföring")
+    account_date.insert(0, str(today))
+    account_note.insert(0, note)
+
     # Adding the new transaction data to the account
     t_account_balance.insert(0, added_balance)
     t_account_transaction.insert(0, "Kontoöverföring")
@@ -203,6 +203,24 @@ def account_transfer(accountnum:str, transfer_num:str, amount, note:str, source_
 
     write_file(Path_Accounts, Accounts_data, 4)
     return True, 0
+
+def check_days_passed(date_str: str, days_passed:int):
+    """Function to check if a number of days has passed since a date.
+    - Imports a string of a date
+    - Imports number of that shuld have passed since a date
+    - Returns True or False if that number of days has passed  
+    """
+    date_object = datetime.strptime(date_str, "%Y-%m-%d")
+    # Get the current date
+    current_date = datetime.now()
+
+    days_until = date_object + timedelta(days=days_passed) # Add a year to the parsed date
+
+    # Check if a year has passed since the date
+    if current_date >= days_until:
+        return True
+    else:
+        return False
 
 def create_user(username:str,password:str):
     """Function to create a new account, and add all the users data to the .json file
@@ -451,6 +469,8 @@ def currency_exchange(amount:str, source_currency:str, target_currency:str, type
         exchanged_amount = float(amount) * exchange_rates[source_currency][target_currency]
 
     return exchanged_amount
+
+    
 
 
 #####################################
@@ -701,8 +721,6 @@ class Logged_In(Frame):
         entry_name = Entry(create_window, cursor='xterm')
         button_create = Button(create_window, text='Skapa',
                                command= lambda: create())
-        frame_type = Frame(create_window, borderwidth=1, relief='solid')
-        frame_currency = Frame(create_window, borderwidth=1, relief='solid')
         
         options_type = [
             'Välj Kontotyp',
@@ -752,8 +770,8 @@ class Logged_In(Frame):
                     new_account(self.controller.logged_userid, clicked_type.get(), clicked_currency.get(), entry_name.get())
                     label_success.grid(column=2, row=0, sticky='e')
                     entry_name.delete(0, END)
-                    option_type.pack()
-                    option_currency.pack()
+                    option_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
+                    option_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w', columnspan=2)
                     self.update_accounts(0)
             
             elif entry_name.get() == '':
@@ -929,9 +947,7 @@ class Account(Frame):
             label_account = Label(self.frame, text=self.controller.logged_accountnum, borderwidth=1, relief='solid')
             label_to = Label(self.frame, text='Till')
             label_note = Label(self.frame, text='Anteckning:')
-            label_error = Label(self.frame, text='Överföring måste vara ett belopp', fg='red')
-            label_choose = Label(self.frame, text='Välj ett konto', fg='red')
-            label_success = Label(self.frame, text='Överföring Lyckades', fg='lime green')
+            label_error = Label(self.frame, text='')
             label_currency = Label(self.frame, text=self.currency)
             button_confirm = Button(self.frame, text='Godkänn',
                                     command= lambda: transfer())
@@ -964,36 +980,41 @@ class Account(Frame):
             label_currency.config(width=4, style='label.TMenubutton')
 
             label_transfer.grid(column=0, row=0, sticky='w', columnspan=3, padx=5)
-            label_account.grid(column=0, row=1, pady=5, sticky='w', padx=5)
+            label_account.grid(column=0, row=2, pady=5, sticky='w', padx=5)
+            label_error.grid(column=0, row=2, sticky='w', padx=5, columnspan=3)
             label_to.grid(column=1, row=1, padx=5, sticky='w')
-            label_note.grid(column=0, row=3, sticky='w', padx=5, columnspan=3)
-            label_currency.grid(column=3, row=2, sticky='w', padx=5)
-            textbox_note.grid(column=0, row=4, sticky='w', columnspan=4, padx=5, pady=5)
-            option_accounts.grid(column=2, row=1, sticky='w', columnspan=10)
-            entry_amount.grid(column=0, row=2, sticky='w', padx=5, pady=5, columnspan=3)
-            button_confirm.grid(column=3, row=2, sticky='e', padx=5)
+            label_note.grid(column=0, row=4, sticky='w', padx=5, columnspan=3)
+            label_currency.grid(column=3, row=3, sticky='w', padx=5)
+            textbox_note.grid(column=0, row=5, sticky='w', columnspan=4, padx=5, pady=5)
+            option_accounts.grid(column=2, row=2, sticky='w', columnspan=10)
+            entry_amount.grid(column=0, row=3, sticky='w', padx=5, pady=5, columnspan=3)
+            button_confirm.grid(column=3, row=3, sticky='e', padx=5)
 
             self.frame.columnconfigure(3, weight=1)
 
             def transfer():
-                label_error.grid_forget()
-                label_choose.grid_forget()
-                label_success.grid_forget()
                 try:
                     value = float(entry_amount.get())
                     transfer_account = clicked_account.get().split(': ')
 
                 except:
-                    label_error.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
+                    label_error.config(text='Överföring måste vara ett belopp', fg='red')
                     return
 
                 if clicked_account.get() != 'Välj Konto' and value < self.balance:
-                    account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'), self.currency)
-                    label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
-                    self.update_account(0)
+                    error, text = account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'), self.currency)
+                    if error: 
+                        label_error.config(text='Överföring lyckades', fg='lime green')
+                        self.update_account(0)
+
+                    elif error == False:
+                        label_error.config(text=text, fg='red')
+
+                elif clicked_account.get() != 'Välj Konto' and value > self.balance:
+                    label_error.config(text='För stort belopp', fg='red')
 
                 else:
-                    label_choose.grid(column=1, row=0, sticky='e', padx=5, columnspan=3)
+                    label_error.config(text='Välj ett konto', fg='red')
                 
         def show_plot():
             self.clear()
@@ -1006,7 +1027,7 @@ class Account(Frame):
             
             ax.plot(dates, balance)
             ax.set_xlabel('Datum')
-            ax.set_ylabel('Belopp ' + self.currency)
+            ax.set_ylabel('Saldo ' + self.currency)
             ax.set_title(f"{str(self.controller.logged_accountnum)}: Saldo Historik",loc= 'left',fontdict=title)
             
             for label in ax.get_xticklabels():
