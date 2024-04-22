@@ -148,7 +148,7 @@ def transaction(accountnum:str, type:str, amount, note:str):
 
     write_file(Path_Accounts,Accounts_data,4)
 
-def account_transfer(accountnum:str, transfer_num:str, amount, note:str):
+def account_transfer(accountnum:str, transfer_num:str, amount, note:str, source_currency:str):
     """Function to write a transaction too and from your account.
     - Imports the amount to be moved
     - Imports a note made by the user
@@ -189,8 +189,10 @@ def account_transfer(accountnum:str, transfer_num:str, amount, note:str):
         t_account_transaction = val["transaction"]
         t_account_date = val["date"]
         t_account_note = val["note"]
-
-        add_balance = t_account_balance[0] + abs(float(amount))
+        t_account_currency = val['currency']
+        
+        exchanged_amount = currency_exchange(amount, source_currency, t_account_currency[0], 'transfer')
+        add_balance = t_account_balance[0] + exchanged_amount
         added_balance = round(add_balance, 2)
     
     # Adding the new transaction data to the account
@@ -443,7 +445,10 @@ def currency_exchange(amount:str, source_currency:str, target_currency:str, type
                       "NOK": {"SEK": 0.76, "USD": 0.09, "EUR": 0.086, "DKK": 0.64}}
     
     # Calculate the equivalent value in the target currency from the amount to be exchanged. 
-    exchanged_amount = float(amount) * exchange_rates[target_currency][source_currency]
+    if type == 'transaction':
+        exchanged_amount = float(amount) * exchange_rates[target_currency][source_currency]
+    else:    
+        exchanged_amount = float(amount) * exchange_rates[source_currency][target_currency]
 
     return exchanged_amount
 
@@ -585,8 +590,8 @@ class Create_Account(Frame):
         self.label_error_invalid = Label(self, text='Error: Ogiltigt Användarnamn\nAnvänd en Email-address', fg='red')
         self.label_success = Label(self, text='Konto Skapades', fg='lime green')
         self.entry_user = Entry(self, cursor='xterm')
-        self.entry_pin = Entry(self, cursor='xterm')
-        self.entry_pin2 = Entry(self, cursor='xterm')
+        self.entry_pin = Entry(self, cursor='xterm', show='*')
+        self.entry_pin2 = Entry(self, cursor='xterm', show='*')
         button_create = Button(self, text='Skapa Konto',
                                command= lambda: create(self.entry_user.get(), self.entry_pin.get(), self.entry_pin2.get()))
         button_back = Button(self, text='Gå Tillbaka',
@@ -903,7 +908,7 @@ class Account(Frame):
             def trans(type:str):
                 
                 try:
-                    value = currency_exchange(entry_amount.get(), self.currency, clicked_currency.get(), type)
+                    value = currency_exchange(entry_amount.get(), self.currency, clicked_currency.get(), 'transaction')
                     
                     if value <= self.balance or type == 'Insättning':
                         transaction(self.controller.logged_accountnum, type, value, textbox_note.get('1.0', 'end-1c'))
@@ -983,7 +988,7 @@ class Account(Frame):
                     return
 
                 if clicked_account.get() != 'Välj Konto' and value < self.balance:
-                    account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'))
+                    account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'), self.currency)
                     label_success.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
                     self.update_account(0)
 
