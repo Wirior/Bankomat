@@ -181,10 +181,10 @@ def account_transfer(account_num:str, transfer_num:str, amount, note:str, source
         added_balance = round(add_balance, 2)
     
         # Checking if accounts are savings accounts
-    if (int(transfer_num) % 2) == 0:
+    if (int(transfer_num) % 2) == 0 and t_account_note[0] != 'Konto skapades':
         if not check_days_passed(t_account_date[0], days_passed= days_lock_account): # Calculate if a set number of days passed since last event on account
             return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar\n efter senaste händeslse"
-    if (int(account_num) % 2) == 0: 
+    if (int(account_num) % 2) == 0 and account_note[0] != 'Konto skapades': 
         if not check_days_passed(account_date[0], days_passed= days_lock_account):
             return False, f"Sparkonton kan endast modifieras {days_lock_account} dagar\n efter senaste händeslse"
 
@@ -478,10 +478,10 @@ def interest():
     # Check if it is the first of the month to run the rest of the intrest function  
     month = ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
     transaction_note = 'Ränta ' + month[today.month - 1] + ' ' + str(today.year)
-    # if not (today.day == 1): return
 
     accounts_data = read_file(Path_Accounts)
 
+    # Check if the transaction for this month has already been written
     for val in accounts_data['2']:
         account_transaction = val['transaction']
         for acc_transaction in account_transaction:
@@ -496,8 +496,7 @@ def interest():
                 account_transaction = val["transaction"]
                 account_date = val["date"]
                 account_note = val["note"]
-            # Check if the account has 
-            # if not check_days_passed(account_date[0], days_passed= 1): break
+
             # Calculate the intrest for the account
             new_balance = account_balance[0] * interest_rate
             added_balance = round(new_balance, 2)
