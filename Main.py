@@ -16,15 +16,11 @@ text_admin = R"""
  /_/    \_\  \__,_| |_| |_| |_| |_| |_| |_|
 """
 
-# from getpass import getpass # Importing the hidden password module for user input
-# import inquirer  # Importing the inquirer module for interactive user prompts
 
 import os  # Importing the os module to interact with the operating system
-import time  # Importing the time module for time-related functions
 import json  # Importing the json module for JSON file operations
 from datetime import date, datetime, timedelta  # Importing the date class from the datetime module
 import random # Importing random function for slump actions
-import matplotlib.pyplot as plt # importing pylot module to plot grapths
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from tkinter import *
@@ -34,7 +30,6 @@ from email_validator import validate_email, EmailNotValidError  # Importing emai
 
 path = os.path.dirname(os.path.realpath(__file__))
 new_path = path.replace('\\', '/')
-print(new_path)
 
 """
 Remember to replace the file path with your location of the files and replace the \\(backslah) with / 
