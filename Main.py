@@ -470,11 +470,48 @@ def currency_exchange(amount:str, source_currency:str, target_currency:str, type
 
     return exchanged_amount
 
-    
+def interest():
+    """Function to calculate the intrest on an account if it is the first day of the month.
+    Updates the .json file for all savings accounts with their given interest. 
+    """
+    interest_rate = random.uniform(1.00125,1.0055) # randomize the intrest rate
+    # Check if it is the first of the month to run the rest of the intrest function  
+    month = ['Januari', 'Februari', 'Mars', 'April', 'Maj', 'Juni', 'Juli', 'Augusti', 'September', 'Oktober', 'November', 'December']
+    transaction_note = 'Ränta ' + month[today.month - 1] + ' ' + str(today.year)
+    # if not (today.day == 1): return
 
+    accounts_data = read_file(Path_Accounts)
 
-#####################################
+    for val in accounts_data['2']:
+        account_transaction = val['transaction']
+        for acc_transaction in account_transaction:
+            if acc_transaction == transaction_note: return
 
+    # Get data from json
+    for account_num in accounts_data:
+        if (int(account_num) % 2) == 0:
+            # Read all the data from the account
+            for val in accounts_data[str(account_num)]:
+                account_balance = val["balance"]
+                account_transaction = val["transaction"]
+                account_date = val["date"]
+                account_note = val["note"]
+            # Check if the account has 
+            # if not check_days_passed(account_date[0], days_passed= 1): break
+            # Calculate the intrest for the account
+            new_balance = account_balance[0] * interest_rate
+            added_balance = round(new_balance, 2)
+
+            # Adding the new transaction data to the account
+            account_balance.insert(0, added_balance)
+            account_transaction.insert(0, transaction_note)
+            account_date.insert(0, str(today))
+            account_note.insert(0, f"Måndasränta {round(interest_rate,4)}% ")
+    # Writing to file when all savings accounts have been added
+    write_file(Path_Accounts, accounts_data, 4)  
+    return
+
+###############################
 
 class Application(Tk): # Creates main application that the UI is located in
     def __init__(self, *args, **kwargs):
@@ -804,7 +841,7 @@ class Logged_In(Frame):
                 self.buttons.append(button)          
 
             for i, balance in enumerate(account_list[3]):
-                button = Button(self, text=balance, relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
+                button = Button(self, text='{:,}'.format(balance).replace(',', ' '), relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
                                 command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
                 button.grid(column=3, row=(2+i), sticky='e')
                 self.buttons.append(button)      
@@ -855,35 +892,36 @@ class Account(Frame):
         self.label_accountnum = Label(self, text='', fg='magenta')
         button_back = Button(self, text='Tillbaka',
                              command= lambda: controller.show_frame('Logged_In'))
-        button_show = Button(self, text='Visa Historik',
+        self.button_show = Button(self, text='Visa Historik',
                              command= lambda: show_plot())
-        button_deposit = Button(self, text='Insättning',
+        self.button_deposit = Button(self, text='Insättning',
                                 command= lambda: set_frame('Insättning'))
-        button_withdraw = Button(self, text='Uttag',
+        self.button_withdraw = Button(self, text='Uttag',
                                  command= lambda: set_frame('Uttag'))
-        button_transaction = Button(self, text='Överföring',
+        self.button_transaction = Button(self, text='Överföring',
                                     command= lambda: set_transfer())
-        button_history = Button(self, text='Visa Transaktioner',
+        self.button_history = Button(self, text='Visa Transaktioner',
                                 command= lambda: show_history())
-        button_delete = Button(self, text='Ta Bort Konto',
+        self.button_delete = Button(self, text='Ta Bort Konto',
                                command= lambda: set_delete())
                 
         label.grid(column=0, row=0, pady=5)
         self.label_accountnum.grid(column=1, row=0, padx=5)
         self.label_balance.grid(column=2, row=0, sticky='e')
         button_back.grid(column=2, row=0, sticky='w')
-        button_deposit.grid(column=0, row=1, sticky='w', padx=5)
-        button_withdraw.grid(column=0, row=2, pady=5, sticky='w', padx=5)
-        button_transaction.grid(column=0, row=3, sticky='w', padx=5)
-        button_show.grid(column=0, row=4, sticky='w', padx=5, pady=5)
-        button_history.grid(column=0, row=5, sticky='w', padx=5, columnspan=2)
-        button_delete.grid(column=0, row=6, sticky='w', padx=5, pady=5, columnspan=2)
+        # self.button_deposit.grid(column=0, row=1, sticky='w', padx=5)
+        # self.button_withdraw.grid(column=0, row=2, pady=5, sticky='w', padx=5)
+        # self.button_transaction.grid(column=0, row=3, sticky='w', padx=5)
+        # self.button_show.grid(column=0, row=4, sticky='w', padx=5, pady=5)
+        # self.button_history.grid(column=0, row=5, sticky='w', padx=5, columnspan=2)
+        # self.button_delete.grid(column=0, row=6, sticky='w', padx=5, pady=5, columnspan=2)
         self.frame.grid(column=2, row=2, rowspan=10, sticky='wn', columnspan=3)
+        self.buttons = []
 
 
         self.columnconfigure(2, weight=1)
         self.rowconfigure(10, weight=1)
-
+        
         def set_frame(type:str):
             self.clear()
             label_deposit = Label(self.frame, text=type + ':')
@@ -1046,7 +1084,7 @@ class Account(Frame):
             label_amount = Label(self.frame, text='Överfört Belopp', relief='ridge', bg='white', borderwidth=1)
             label_note = Label(self.frame, text='Anteckning', relief='ridge', bg='white', borderwidth=1)
             listbox_history_date = Listbox(self.frame, relief='ridge', width=10) # Listbox() is a widget that displays a list of values in a scrollable box format
-            listbox_history_transaction = Listbox(self.frame, relief='ridge')
+            listbox_history_transaction = Listbox(self.frame, relief='ridge', width=22)
             listbox_history_amount = Listbox(self.frame, relief='ridge')
             listbox_history_note = Listbox(self.frame, relief='ridge')
             listboxes = [listbox_history_date, listbox_history_transaction, listbox_history_amount, listbox_history_note]
@@ -1123,6 +1161,22 @@ class Account(Frame):
                 # label_message.config(text='')
                 entry_pin.delete(0, END)
 
+    def check_buttons(self):
+
+        for i ,button in enumerate(self.buttons):
+            button.grid(column=0, row=1+i, sticky='w', padx=5, pady=3, columnspan=2)
+
+    def clear_buttons(self):
+        for button in self.buttons:
+            button.grid_forget()
+
+        if not self.controller.logged_accountnum % 2:
+            self.buttons = [self.button_transaction, self.button_show, self.button_history, self.button_delete]
+        
+        else:
+            self.buttons = [self.button_deposit, self.button_withdraw, self.button_transaction, self.button_show, self.button_history, self.button_delete]
+
+
     def clear(self):
         self.frame.destroy()
         self.frame = Frame(self, borderwidth=1, relief='solid')
@@ -1140,6 +1194,8 @@ class Account(Frame):
         self.sorttype = self.controller.logged_sorttype
         self.clear()
         self.update_account(self.sorttype)
+        self.clear_buttons()
+        self.check_buttons()
         super().tkraise(aboveThis)
         
 class Admin(Frame):
@@ -1180,5 +1236,6 @@ class Admin(Frame):
 
 
 if __name__ == '__main__': # Starts the application
+    interest()
     app = Application()
     app.mainloop()
