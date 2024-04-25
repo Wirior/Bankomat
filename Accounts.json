@@ -306,6 +306,8 @@
                 "SEK"
             ],
             "balance": [
+                995.54,
+                1005.54,
                 5.54,
                 15.54,
                 25.54,
@@ -329,6 +331,8 @@
             ],
             "transaction": [
                 "Konto\u00f6verf\u00f6ring",
+                "Ins\u00e4ttning",
+                "Konto\u00f6verf\u00f6ring",
                 "Konto\u00f6verf\u00f6ring",
                 "Ins\u00e4ttning",
                 "Uttag",
@@ -351,6 +355,8 @@
             ],
             "date": [
                 "2024-04-25",
+                "2024-04-25",
+                "2024-04-25",
                 "2024-04-22",
                 "2024-04-21",
                 "2024-04-21",
@@ -372,6 +378,8 @@
                 "2024-04-14"
             ],
             "note": [
+                "",
+                "",
                 "",
                 "",
                 "",
@@ -626,6 +634,54 @@
             ],
             "note": [
                 "",
+                "Konto skapades"
+            ]
+        }
+    ],
+    "818517": [
+        {
+            "name": [
+                "Hello"
+            ],
+            "currency": [
+                "SEK"
+            ],
+            "balance": [
+                10.0,
+                0
+            ],
+            "transaction": [
+                "Konto\u00f6verf\u00f6ring",
+                ""
+            ],
+            "date": [
+                "2024-04-25",
+                "2024-04-25"
+            ],
+            "note": [
+                "",
+                "Konto skapades"
+            ]
+        }
+    ],
+    "428332": [
+        {
+            "name": [
+                "Spar"
+            ],
+            "currency": [
+                "EUR"
+            ],
+            "balance": [
+                0
+            ],
+            "transaction": [
+                ""
+            ],
+            "date": [
+                "2024-04-25"
+            ],
+            "note": [
                 "Konto skapades"
             ]
         }

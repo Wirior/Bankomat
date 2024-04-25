@@ -350,6 +350,20 @@ def get_accounts(user_id:str, sort_type):
 
     return name_list, account_list, type_list, balance_list, currency_list
 
+def check_account(account_num:str):
+
+    account_data = read_file(Path_Accounts)
+
+    try:
+        account = account_data[account_num]
+        
+        if int(account_num) % 2:
+            return True
+        
+        else: return False
+    
+    except: return None
+
 def validate_username(email:str):
     """Function to validate email address.
     """
@@ -988,6 +1002,7 @@ class Account(Frame):
             button_confirm = Button(self.frame, text='Godkänn',
                                     command= lambda: transfer())
             entry_amount = Entry(self.frame, cursor='xterm')
+            entry_account = Entry(self.frame, cursor='xterm')
             textbox_note = Text(self.frame, cursor='xterm', width=33, height=5)
 
             option_accounts = []
@@ -1004,8 +1019,15 @@ class Account(Frame):
                 if i != self.controller.logged_i:
                     new_account = str(account).strip("[']")
                     option_accounts.append(new_account + ': ' + str(accounts[1][i]))
+            option_accounts.append('Annan användare...')
+            
+            def on_option_change(*args):
+                if clicked_account.get() == 'Annan användare...':
+                    option_accounts.grid_forget()
+                    entry_account.grid(column=2, row=2, sticky='w', columnspan=10)
             
             clicked_account = StringVar()
+            clicked_account.trace_add('write', on_option_change)
             option_accounts = ttk.OptionMenu(self.frame, clicked_account, 'Välj Konto', *option_accounts)
             option_accounts.config(width=15, style='custom.TMenubutton')
             current_account = StringVar()
@@ -1031,13 +1053,16 @@ class Account(Frame):
             def transfer():
                 try:
                     value = float(entry_amount.get())
-                    transfer_account = clicked_account.get().split(': ')
+                    if clicked_account.get() == 'Annan användare...':
+                        transfer_account = entry_account.get()
+                    else:
+                        transfer_account = clicked_account.get().split(': ')
 
                 except:
                     label_error.config(text='Överföring måste vara ett belopp', fg='red')
                     return
 
-                if clicked_account.get() != 'Välj Konto' and value < self.balance:
+                if clicked_account.get() != 'Välj Konto' and value < self.balance and entry_account.get() == '':
                     error, text = account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'), self.currency)
                     if error: 
                         label_error.config(text='Överföring lyckades', fg='lime green')
@@ -1046,12 +1071,24 @@ class Account(Frame):
                     elif error == False:
                         label_error.config(text=text, fg='red')
 
-                elif clicked_account.get() != 'Välj Konto' and value > self.balance:
-                    label_error.config(text='För stort belopp', fg='red')
+                elif entry_account.get() != '':
+                    res = check_account(transfer_account)
 
-                else:
-                    label_error.config(text='Välj ett konto', fg='red')
-                
+                    if res:
+                        error, text = account_transfer(self.controller.logged_accountnum, transfer_account, value, textbox_note.get('1.0', 'end-1c'), self.currency)
+                        if error: 
+                            label_error.config(text='Överföring lyckades', fg='lime green')
+                            self.update_account(self.sorttype)
+
+                        elif value > self.balance:
+                            label_error.config(text='För stort belopp', fg='red')
+                    
+                    elif not res:
+                        label_error.config(text='Kan endast överföra till \nandra användares betalkonto', fg='red')
+
+                    elif res == None:
+                        label_error.config(text='Felaktigt kontonummer', fg='red')
+                    
         def show_plot():
             self.clear()
             balance, dates = balance_history(self.controller.logged_accountnum)
