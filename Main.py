@@ -32,12 +32,16 @@ from tkinter import ttk
 
 from email_validator import validate_email, EmailNotValidError  # Importing email validation functions
 
+path = os.path.dirname(os.path.realpath(__file__))
+new_path = path.replace('\\', '/')
+print(new_path)
+
 """
 Remember to replace the file path with your location of the files and replace the \\(backslah) with / 
 """
-Path_Users = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Users.json"  # Path to the users JSON file
-Path_Passwords = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Passwords.json"  # Path to the passwords JSON file
-Path_Accounts = "C:/Users/willi/My Drive/Gruppuppgift/Bankomat-main-gui/Accounts.json"  # Path to the accounts JSON file
+Path_Users = new_path + "/Users.json"  # Path to the users JSON file
+Path_Passwords = new_path + "/Passwords.json"  # Path to the passwords JSON file
+Path_Accounts = new_path + "/Accounts.json"  # Path to the accounts JSON file
 
 today = date.today()  # Getting today's date
 
