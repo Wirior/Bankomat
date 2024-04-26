@@ -1222,7 +1222,7 @@ class Account(Frame):
         self.balance = accounts[3][self.controller.logged_i]
         currency = accounts[4][self.controller.logged_i]
         self.currency = currency[0]
-        self.label_balance.config(text='Saldo: ' + str(self.balance) + ' ' + str(self.currency))
+        self.label_balance.config(text='Saldo: ' + '{:,}'.format(self.balance).replace(',', ' ') + ' ' + str(self.currency))
         self.label_accountnum.config(text=self.controller.logged_accountnum)
 
     def tkraise(self, aboveThis=None):
