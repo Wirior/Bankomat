@@ -835,7 +835,7 @@ class Logged_In(Frame):
 
             self.buttons = []
             for i, name in enumerate(account_list[0]):
-                button = Button(self, text=name, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                button = Button(self, text=str(name).strip("[]{'}"), relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
                                 command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
                 button.grid(column=0, row=(2+i), columnspan=4, sticky='w')
                 self.buttons.append(button)
@@ -1193,7 +1193,6 @@ class Account(Frame):
 
             def reset():
                 button_confirm.config(text='Bekräfta', command= lambda: delete())
-                # label_message.config(text='')
                 entry_pin.delete(0, END)
 
     def check_buttons(self):
