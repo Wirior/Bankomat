@@ -742,6 +742,8 @@ class Logged_In(Frame):
                                        command= lambda: self.update_accounts(3))
         button_accountcurrency = Button(self, text='Valuta', relief='solid', borderwidth=1, width=45, height=1, anchor='w', padx=5,
                                         command= lambda: self.update_accounts(4))
+        self.canvas_accounts = Canvas(self, borderwidth=0)
+        self.frame_canvas = Frame(self.canvas_accounts, borderwidth=0)
         
         frame_info.grid(column=0, row=0, sticky='w', columnspan=5)
         label_loggedtext.grid(column=0, row=0, sticky='w', pady=5)
@@ -752,12 +754,14 @@ class Logged_In(Frame):
         button_accounttype.grid(column=2, row=1, columnspan=4, sticky='w')
         button_accountbalance.grid(column=3, row=1, sticky='e')
         button_accountcurrency.grid(column=4, row=1, columnspan=4, sticky='e')
+        self.canvas_accounts.grid(column=0, row=2, columnspan=6, rowspan=100, sticky='nwse')
+        self.canvas_accounts.create_window((0, 0), window=self.frame_canvas, anchor='nw')    
 
         self.columnconfigure(4, weight=1)
-        self.rowconfigure(10, weight=1)
+        self.rowconfigure(100, weight=1)
 
         def logout():
-            controller.show_frame('StartPage')
+            controller.show_frame('StartPage')        
 
     def create_account(self):
         create_window = Toplevel(self.controller)
@@ -827,51 +831,62 @@ class Logged_In(Frame):
             else:
                 label_error.grid(column=2, row=0, sticky='e')
                             
-
     def update_accounts(self, sort_type):
-        self.clear()
+        self.clear()     
+        
         try:
             account_list = get_accounts(self.controller.logged_userid, sort_type)
 
             self.buttons = []
             for i, name in enumerate(account_list[0]):
-                button = Button(self, text=str(name).strip("[]{'}"), relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                button = Button(self.frame_canvas, text=str(name).strip("[]{'}"), relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
                                 command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
-                button.grid(column=0, row=(2+i), columnspan=4, sticky='w')
+                button.grid(column=0, row=(0+i), columnspan=4, sticky='w')
                 self.buttons.append(button)
             
             for i, account in enumerate(account_list[1]):
-                button = Button(self, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
+                button = Button(self.frame_canvas, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
                                 command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
-                button.grid(column=1, row=(2+i), columnspan=4, sticky='w')
+                button.grid(column=1, row=(0+i), columnspan=4, sticky='w')
                 self.buttons.append(button)
 
             for i, type in enumerate(account_list[2]):
-                button = Button(self, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
+                button = Button(self.frame_canvas, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
                                 command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
-                button.grid(column=2, row=(2+i), columnspan=4, sticky='w')
+                button.grid(column=2, row=(0+i), columnspan=4, sticky='w')
                 self.buttons.append(button)          
 
             for i, balance in enumerate(account_list[3]):
-                button = Button(self, text='{:,}'.format(balance).replace(',', ' '), relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
+                button = Button(self.frame_canvas, text='{:,}'.format(balance).replace(',', ' '), relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
                                 command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
-                button.grid(column=3, row=(2+i), sticky='e')
+                button.grid(column=3, row=(0+i), sticky='e')
                 self.buttons.append(button)      
 
             for i, currency in enumerate(account_list[4]):
-                button = Button(self, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
+                button = Button(self.frame_canvas, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
                                 command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
-                button.grid(column=4, row=(2+i), columnspan=4, sticky='e')
-                self.buttons.append(button) 
+                button.grid(column=4, row=(0+i), columnspan=4, sticky='e')
+                self.buttons.append(button)
             
-        except: 
-            None
+            self.update_scrollregion()
+            
+            if len(self.buttons) < 40:
+                self.canvas_accounts.unbind_all('<MouseWheel>')
+            else:
+                self.canvas_accounts.bind_all('<MouseWheel>', self.on_mousewheel)
+            
+        except: None
 
         def switch_to(accountnum, sort_type, i):
             self.controller.logged_accountnum = accountnum
             self.controller.logged_sorttype = sort_type
             self.controller.logged_i = i
-            self.controller.show_frame('Account')       
+            self.controller.show_frame('Account')
+            
+    def update_scrollregion(self):
+        def update_scrollregion():   
+            self.canvas_accounts.config(scrollregion=self.canvas_accounts.bbox('all'))       
+        self.canvas_accounts.after_idle(update_scrollregion)
 
     def clear(self):        
         try:
@@ -882,6 +897,9 @@ class Logged_In(Frame):
     def update_user(self):
         self.label_user.config(text=self.controller.logged_username)
         self.label_user.grid(column=1, row=0, padx=5, sticky='w')
+
+    def on_mousewheel(self, event):
+        self.canvas_accounts.yview_scroll(-1*event.delta//120, 'units')
 
     def tkraise(self, aboveThis=None):
         self.update_user()
@@ -921,12 +939,6 @@ class Account(Frame):
         self.label_accountnum.grid(column=1, row=0, padx=5)
         self.label_balance.grid(column=2, row=0, sticky='e')
         button_back.grid(column=2, row=0, sticky='w')
-        # self.button_deposit.grid(column=0, row=1, sticky='w', padx=5)
-        # self.button_withdraw.grid(column=0, row=2, pady=5, sticky='w', padx=5)
-        # self.button_transaction.grid(column=0, row=3, sticky='w', padx=5)
-        # self.button_show.grid(column=0, row=4, sticky='w', padx=5, pady=5)
-        # self.button_history.grid(column=0, row=5, sticky='w', padx=5, columnspan=2)
-        # self.button_delete.grid(column=0, row=6, sticky='w', padx=5, pady=5, columnspan=2)
         self.frame.grid(column=2, row=2, rowspan=10, sticky='wn', columnspan=3)
         self.buttons = []
 
