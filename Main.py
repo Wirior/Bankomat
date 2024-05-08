@@ -110,12 +110,12 @@ def incorrect_psw(user_id:str):
 def correct_psw(user_id:str):
     """Function to reset number of log in attempts upon successful attempt"""
     
+    # Get data from json file
     Passwords_data = read_file(Path_Passwords)
-    
     for count, val in enumerate(Passwords_data['password']):
         if user_id == val['user_id']:
             break
-    Passwords_data['password'][count]['trys'] = 4
+    Passwords_data['password'][count]['trys'] = 4 # Resets number of attempts to 4
     write_file(Path_Passwords,Passwords_data,4)
 
 def transaction(accountnum:str, type:str, amount, note:str):
@@ -132,9 +132,6 @@ def transaction(accountnum:str, type:str, amount, note:str):
         account_transaction = val["transaction"]
         account_date = val["date"]
         account_note = val["note"]
-    
-    # if isinstance(amount, (int, float)):  # pass tuple
-    #     return False, "Strängar kan inte matas in"
 
     if type == "Uttag": amount = -1*abs(float(amount)) # Negating amount for withdrawals
     
@@ -300,7 +297,7 @@ def get_accounts(user_id:str, sort_type):
 
     account_list = val_psw['account']
     type_list = []
-    for id in account_list:
+    for id in account_list: # Adds account type to empty list
         if id % 2 == 0:
             type_list.append('Sparkonto')
         elif id % 2 == 1:
@@ -309,7 +306,7 @@ def get_accounts(user_id:str, sort_type):
     name_list = []
     currency_list = []
     balance_list = []
-    for val_acc in account_list:        
+    for val_acc in account_list: # Adds name, currency and balance to respective lists       
         for account in accounts_data[str(val_acc)]:
             name = account['name']
             currency = account['currency']
@@ -317,15 +314,13 @@ def get_accounts(user_id:str, sort_type):
             name_list.append(name)
             currency_list.append(currency)
             balance_list.append(balance[0])
-            
-    combined = list(zip(name_list, account_list, type_list, balance_list, currency_list))
-    combined.sort()
-    name_list, account_list, type_list, balance_list, currency_list = zip(*combined)
 
+    # Sorts lists alphabetically or numerically depending on defined sort_type
+    # sort_type is determined by which sorting button is pressed in the GUI 
     if sort_type == 0:
-        combined = list(zip(name_list, account_list, type_list, balance_list, currency_list))
-        combined.sort()
-        name_list, account_list, type_list, balance_list, currency_list = zip(*combined)
+        combined = list(zip(name_list, account_list, type_list, balance_list, currency_list)) # zip combines the lists
+        combined.sort() # Sorts combined list in alphabetical or numerical order depending on first list zipped, name_list in this case
+        name_list, account_list, type_list, balance_list, currency_list = zip(*combined) # Splits up the combined list back into the individual lists
 
     elif sort_type == 1:
         combined = list(zip(account_list, name_list, type_list, balance_list, currency_list))
@@ -351,13 +346,14 @@ def get_accounts(user_id:str, sort_type):
     return name_list, account_list, type_list, balance_list, currency_list
 
 def check_account(account_num:str):
+    """Checks if account number is valid"""
 
     account_data = read_file(Path_Accounts)
 
     try:
-        account = account_data[account_num]
+        account_data[account_num] # Checks if account number exists in json
         
-        if int(account_num) % 2:
+        if int(account_num) % 2: # Checks if account is "betalkonto"
             return True
         
         else: return False
@@ -388,7 +384,7 @@ def create_id(data,id):
         if trigger: return new_id
         input("pause")
 
-def balance_history(accountnum:str): # Det finns något sätt att embed:a pyplot i Tkinter appen
+def balance_history(accountnum:str):
     """Function to plot the balance hotory of a specif account number
     """
     accounts_data = read_file(Path_Accounts)
@@ -398,10 +394,10 @@ def balance_history(accountnum:str): # Det finns något sätt att embed:a pyplot
         account_date = val["date"]
     
     balance_dict = {}
-    for balances, dates in zip(reversed(account_balance), reversed(account_date)):
-        balance_dict[dates] = balances 
+    for balances, dates in zip(reversed(account_balance), reversed(account_date)): # Reverses order of retrieved lists to be in chronological order
+        balance_dict[dates] = balances # Binds dates to balance in dictionary 
     
-    date = list(balance_dict.keys())
+    date = list(balance_dict.keys()) # Splits dictionary into lists for date and balance in chronological order
     balance = list(balance_dict.values())          
 
     return balance, date
@@ -412,18 +408,18 @@ def get_history(accountnum:str, currency:str):
     
     accounts_data = read_file(Path_Accounts)
     
-    amount_list = []
-    for account in accounts_data[str(accountnum)]:
+    for account in accounts_data[str(accountnum)]: # Stores account events from json
         balance_list = account['balance']
         transaction_list = account['transaction']
         date_list = account['date']
         note_list = account['note']
-        
-    for i, balance in enumerate(balance_list):
+
+    amount_list = [] # Creates empty list to store balance changes between events    
+    for i, balance in enumerate(balance_list): # Calculates change in balance between events
         if i < (len(balance_list) - 1):
             amount = balance - balance_list[i + 1]
             amount_list.append(str(round(amount, 2)) + ' ' + currency)
-    amount_list.append('')
+    amount_list.append('') # Appends to list
         
     return amount_list, transaction_list, date_list, note_list
 
@@ -525,13 +521,16 @@ def interest():
 
 ###############################
 
-class Application(Tk): # Creates main application that the UI is located in
+class Application(Tk): # Creates main application that the GUI is located in
     def __init__(self, *args, **kwargs):
         Tk.__init__(self, *args, **kwargs)
 
+        # Defines application window properties
         self.title('Bankomat')
         self.minsize(675, 350)
         self.maxsize(675, 350)
+
+        # Sets up variables shared between frames
         self.logged_userid = None
         self.logged_accounts = None
         self.logged_username = None
@@ -539,11 +538,13 @@ class Application(Tk): # Creates main application that the UI is located in
         self.logged_sorttype = None
         self.logged_i = None
         
+        # Sets up container frame
         container = Frame(self)
         container.pack(side='top', fill='both', expand=True)
         container.grid_rowconfigure(0, weight=1)
         container.grid_columnconfigure(0, weight=1)
         
+        # Initializes all frames for application
         self.frames = {}
         for F in (StartPage, Login, Create_Account, Admin, Logged_In, Account):
             page_name = F.__name__
@@ -552,51 +553,63 @@ class Application(Tk): # Creates main application that the UI is located in
 
             frame.grid(row=0, column=0, sticky='nsew')
         
+        # Shows "StartPage" frame
         self.show_frame('StartPage')
         
-    def show_frame(self, page_name):
+    def show_frame(self, page_name): # Defines show_frame function used to switch between frames
         frame = self.frames[page_name]
         frame.tkraise()
         
 
-class StartPage(Frame):
+class StartPage(Frame): # Sets up "StartPage" frame
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
-        label_title = Label(self, text=text_title, font=('Courier', 8), justify=LEFT)
+        label_title = Label(self, text=text_title, font=('Courier', 8), justify=LEFT) # Creates label widget containing "Bankomat" ascii text
+        
+        # Creates buttons to switch to respective frames
         button_login = Button(self, text='Logga In',
-                              command= lambda: controller.show_frame('Login'))
+                              command= lambda: controller.show_frame('Login')) # Button switches to frame "Login"
         button_create = Button(self, text='Skapa Konto',
                                command= lambda: controller.show_frame('Create_Account'))
         button_admin = Button(self, text='Admin',
                               command= lambda: controller.show_frame('Admin'))
         
+        # Defines placement of all widgets within the frame using the grid function
         label_title.grid(column=0, row=0, sticky='n')
         button_login.grid(column=0, row=1, padx=10, sticky='w')
         button_create.grid(column=0, row=2, padx=10, pady=5, sticky='w')
         button_admin.grid(column=0, row=3, padx=10, sticky='w')
         
-class Login(Frame):
-    
+class Login(Frame): # Sets up "Login" frame    
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
+        
+        # Imports stored variables
         self.logged_accounts = self.controller.logged_accounts
         self.logged_username = self.controller.logged_username
         self.logged_userid = self.controller.logged_userid
+        
+        # Creates labels for frame
         label_title = Label(self, text='Logga In')
         label_user = Label(self, text='Användarnamn:')
-        label_pin = Label(self, text='Pin-kod:')
+        label_pin = Label(self, text='Lösenord:')
         self.label_error_exist = Label(self, text='Error: Inkorrekt Användarnamn', fg='red')
         self.label_error_pin = Label(self, text='', fg='red')
         self.label_error_locked = Label(self, text='Error: Konto Låst\nInga Försök Återstår', fg='red')
+        
+        # Creates entry widgets allowing user to write login information
         self.entry_user = Entry(self, cursor='xterm')
         self.entry_pin = Entry(self, cursor='xterm', show='*')
+
+        # Creates button widgets
         button_login = Button(self, text='Logga In',
                               command= lambda: login(self.entry_user.get(), self.entry_pin.get()))
         button_back = Button(self, text='Gå Tillbaka',
                              command= lambda: controller.show_frame('StartPage'))
         
+        # Defines placement of all widgets
         label_title.grid(column=0, row=0, columnspan=2)
         label_user.grid(column=0, row=1, sticky='e')
         label_pin.grid(column=0, row=2, pady=5, sticky='e')
@@ -605,68 +618,75 @@ class Login(Frame):
         button_login.grid(column=0, row=5, pady=10, sticky='n', columnspan=2)
         button_back.grid(column=0, row=6, pady=10, sticky='s', columnspan=2)
         
+        # Configure scaling of specific columns and rows within the frame
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
         self.rowconfigure(5, weight=1)
         self.rowconfigure(6, weight=1)
         
-        def login(username, pin):
+        def login(username, pin): # Checks if username and password are correct
             self.clearerror()
-            user = check_username(username)
-            if user[0] == True:
-                trys = check_password(user[1], pin)
-                if trys[0] == True:
-                    self.controller.logged_userid = user[1]
-                    self.controller.logged_accounts = trys[1]
+            user_error, user_id = check_username(username)
+            if user_error == True:
+                error, trys = check_password(user_id, pin)
+                if error == True: # If correct stores data in shared variables
+                    self.controller.logged_userid = user_id
+                    self.controller.logged_accounts = trys
                     self.controller.logged_username = self.entry_user.get()
                     controller.show_frame('Logged_In')
                 
-                elif trys[0] == False:
+                elif error == False: # If account locked displays locked error message
                     self.label_error_locked.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
                 
-                elif trys[0] == None:
-                    self.label_error_pin.config(text=('Error: Inkorrekt Pin-kod\n' + str(trys[1]) + ' Försök Återstår'))
+                elif error == None: # If password incorrect display attempts remaining error message
+                    self.label_error_pin.config(text=('Error: Inkorrekt Lösenord\n' + str(trys) + ' Försök Återstår'))
                     self.label_error_pin.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
                     
-            else:
+            else: # Display account does not exist if username does not exist
                 self.label_error_exist.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
         
-    def clearframe(self):
+    def clearframe(self): # Clears entry widgets
         self.entry_user.delete(0, END)
         self.entry_pin.delete(0, END)
     
-    def clearerror(self):
+    def clearerror(self): # Removes all error messages from frame
         self.label_error_exist.grid_forget()
         self.label_error_pin.grid_forget()
         self.label_error_locked.grid_forget()
     
-    def tkraise(self, aboveThis=None):
+    def tkraise(self, aboveThis=None): # Runs clearframe and clearerror whenever frame is raised (Displayed)
         self.clearframe()
         self.clearerror()
         super().tkraise(aboveThis)
                 
-class Create_Account(Frame):
-    
+class Create_Account(Frame): # Sets up "Create_Account" frame    
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
+
+        # Creates label widgets
         label_title = Label(self, text='Skapa Konto')
         label_user = Label(self, text='Användarnamn:')
-        label_pin = Label(self, text='Pin-kod:')
-        label_pin2 = Label(self, text='Upprepa Pin:')
+        label_pin = Label(self, text='Lösenord:')
+        label_pin2 = Label(self, text='Upprepa Lösenord:')
         self.label_error_exists = Label(self, text='Error: Konto Finns Redan', fg='red')
-        self.label_error_match = Label(self, text='Error: Pin-koder Matchar Inte', fg='red')
+        self.label_error_match = Label(self, text='Error: Lösenord Matchar Inte', fg='red')
         self.label_error_invalid = Label(self, text='Error: Ogiltigt Användarnamn\nAnvänd en Email-address', fg='red')
         self.label_success = Label(self, text='Konto Skapades', fg='lime green')
+        
+        # Creates entry widgets
         self.entry_user = Entry(self, cursor='xterm')
         self.entry_pin = Entry(self, cursor='xterm', show='*')
         self.entry_pin2 = Entry(self, cursor='xterm', show='*')
+        
+        # Creates button widgets
         button_create = Button(self, text='Skapa Konto',
                                command= lambda: create(self.entry_user.get(), self.entry_pin.get(), self.entry_pin2.get()))
         button_back = Button(self, text='Gå Tillbaka',
                              command= lambda: controller.show_frame('StartPage'))
                
+        # Defines placement of all widgets in frame
         label_title.grid(column=0, row=0, columnspan=2)
         label_user.grid(column=0, row=1, sticky='e')
         label_pin.grid(column=0, row=2, pady=5, sticky='e')
@@ -677,57 +697,65 @@ class Create_Account(Frame):
         button_create.grid(column=0, row=5, pady=10, sticky='n', columnspan=2)
         button_back.grid(column=0, row=6, pady=10, sticky='s', columnspan=2)
                 
+        # Configures specific columns and rows in frame
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(6, weight=1)
         self.rowconfigure(5, weight=1)
         self.rowconfigure(0, weight=1)
         
-        def create(username, pin, pin2):            
+        def create(username, pin, pin2): # Function to check if information provided by user is valid for account creation, if true creates account            
             self.clearerror()
-            if pin != pin2:
+            if pin != pin2: # Checks if passwords match
                 self.label_error_match.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
                 return
             
-            if create_user(username, pin) == 0:
+            if create_user(username, pin) == 0: # Displays success message if account created
                 self.label_success.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
            
-            elif create_user(username, pin) == 1:
+            elif create_user(username, pin) == 1: # Displays invalid username error
                 self.label_error_invalid.grid(column=0, row=5, sticky='s', pady=10, columnspan=2) 
             
-            elif create_user(username, pin) == 2:
+            elif create_user(username, pin) == 2: # Displays account already exists error
                 self.label_error_exists.grid(column=0, row=5, sticky='s', pady=10, columnspan=2)
                             
-    def clearentry(self):
+    def clearentry(self): # Clears widgets
         self.entry_user.delete(0, END)
         self.entry_pin.delete(0, END)
         self.entry_pin2.delete(0, END)
         
-    def clearerror(self):
+    def clearerror(self): # Removes all error messages from frame
         self.label_error_exists.grid_forget()
         self.label_error_match.grid_forget()
         self.label_error_invalid.grid_forget()
         self.label_success.grid_forget()
     
-    def tkraise(self, aboveThis=None):
+    def tkraise(self, aboveThis=None): # Executes clearentry and clearerror functions when frame is raised
         self.clearentry()
         self.clearerror()
         super().tkraise(aboveThis)
         
-class Logged_In(Frame):
-    
+class Logged_In(Frame): # Sets up "Logged_In" frame
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
+
+        # Imports necessary shared variables
         self.logged_accounts = self.controller.logged_accounts
         self.logged_username = self.controller.logged_username
         self.logged_userid = self.controller.logged_userid
         self.logged_accountnum = self.controller.logged_accountnum
         self.logged_sorttype = self.controller.logged_sorttype
         self.logged_i = self.controller.logged_i
+
+        # Creates frame within the "Logged_In" frame for displaying username and logout button
         frame_info = Frame(self)
+
+        # Creates labels for users username within the "frame_info" frame
         label_loggedtext = Label(frame_info, text='Inloggad som:')
         self.label_user = Label(frame_info, text='', fg='magenta')
+
+        # Creates button widgets
         button_logout = Button(frame_info, text='Logga ut',
                                command= lambda: logout())
         button_create = Button(self, text='Skapa Konto',
@@ -742,9 +770,12 @@ class Logged_In(Frame):
                                        command= lambda: self.update_accounts(3))
         button_accountcurrency = Button(self, text='Valuta', relief='solid', borderwidth=1, width=45, height=1, anchor='w', padx=5,
                                         command= lambda: self.update_accounts(4))
+        
+        # Creates canvas and frame widgets related to account scrolling
         self.canvas_accounts = Canvas(self, borderwidth=0)
         self.frame_canvas = Frame(self.canvas_accounts, borderwidth=0)
         
+        # Defines placement of all widgets within frame(s)
         frame_info.grid(column=0, row=0, sticky='w', columnspan=5)
         label_loggedtext.grid(column=0, row=0, sticky='w', pady=5)
         button_logout.grid(column=2, row=0, sticky='w')
@@ -757,18 +788,22 @@ class Logged_In(Frame):
         self.canvas_accounts.grid(column=0, row=2, columnspan=6, rowspan=100, sticky='nwse')
         self.canvas_accounts.create_window((0, 0), window=self.frame_canvas, anchor='nw')    
 
+        # Configures specific column and row
         self.columnconfigure(4, weight=1)
         self.rowconfigure(100, weight=1)
 
-        def logout():
+        def logout(): # Go back to "StartPage"
             controller.show_frame('StartPage')        
 
-    def create_account(self):
+    def create_account(self): # Creates window for account creation
         create_window = Toplevel(self.controller)
+        
+        # Defines properties for new window
         create_window.title('Skapa Konto')
         create_window.minsize(400, 150)
         create_window.maxsize(400, 150)
 
+        # Creates widgets for new window
         label_name = Label(create_window, text='Kontonamn:')
         label_error = Label(create_window, text='Måste välja kontotyp och valuta', fg='red')
         label_success = Label(create_window, text='Konto skapades', fg='lime green')
@@ -777,11 +812,13 @@ class Logged_In(Frame):
         button_create = Button(create_window, text='Skapa',
                                command= lambda: create())
         
+        # Creates list of available options for account type
         options_type = [
             'Betalkonto',
             'Sparkonto'
         ]
 
+        # Creates list of available optinos for currency
         options_currency = [
             'SEK',
             'USD',
@@ -790,11 +827,13 @@ class Logged_In(Frame):
             'NOK'
         ]
 
+        # Creates specific design for OptionMenu widget
         style = ttk.Style()
         style.theme_use('clam')
         style.configure('custom.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=3)
         style.map('custom.TMenubutton', background=[('active', 'light gray')])
 
+        # Creates dropdown menu with the option defined above
         clicked_type = StringVar()
         clicked_currency = StringVar()
         option_type = ttk.OptionMenu(create_window, clicked_type, 'Välj Kontotyp', *options_type)
@@ -802,21 +841,24 @@ class Logged_In(Frame):
         option_currency = ttk.OptionMenu(create_window, clicked_currency, 'Välj Valuta', *options_currency)
         option_currency.config(width=10, style='custom.TMenubutton')
         
-
-
+        # Defines placement of all widgets within window
         label_name.grid(column=0, row=0, padx=5, sticky='w')
         entry_name.grid(column=1, row=0, sticky='w')
         option_type.grid(column=0, row=1, padx=5, pady=5, sticky='w', columnspan=2)
         option_currency.grid(column=1, row=1, padx=45, pady=5, sticky='w', columnspan=2)
         button_create.grid(column=2, row=1)
 
+        # Configures specific column and row
         create_window.columnconfigure(2, weight=1)
         create_window.rowconfigure(3, weight=1)
 
-        def create():
+        def create(): # Function to create new account
             label_error.grid_forget()
             label_error_name.grid_forget()
             label_success.grid_forget()
+            
+            # If user has input name for account and chosen account type and currency function creates new account within users account
+            # Otherwise displays error messages pertaining to specific error
             if clicked_type.get() != 'Välj Kontotyp' and clicked_currency.get() != 'Välj Valuta' and entry_name.get() != '':
                     new_account(self.controller.logged_userid, clicked_type.get(), clicked_currency.get(), entry_name.get())
                     label_success.grid(column=2, row=0, sticky='e')
@@ -831,95 +873,103 @@ class Logged_In(Frame):
             else:
                 label_error.grid(column=2, row=0, sticky='e')
                             
-    def update_accounts(self, sort_type):
+    def update_accounts(self, sort_type): # Refreshes list of accounts depending on sort_type
         self.clear()     
         
-        try:
-            account_list = get_accounts(self.controller.logged_userid, sort_type)
+        try: # Retrieves all accounts within users account, if there are none nothing happens
+            name_list, account_list, type_list, balance_list, currency_list = get_accounts(self.controller.logged_userid, sort_type)
 
-            self.buttons = []
-            for i, name in enumerate(account_list[0]):
+            self.buttons = [] # Creates empty list for all created buttons
+            # Buttons need to be in a list in order to be easily removed when needed
+            for i, name in enumerate(name_list): # Creates button displaying account name, moves to tied account when pressed
                 button = Button(self.frame_canvas, text=str(name).strip("[]{'}"), relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
+                                command= lambda i=i: switch_to(account_list[i], sort_type, i))
                 button.grid(column=0, row=(0+i), columnspan=4, sticky='w')
                 self.buttons.append(button)
             
-            for i, account in enumerate(account_list[1]):
+            for i, account in enumerate(account_list): # Creates button displaying account number, moves to tied account when pressed
                 button = Button(self.frame_canvas, text=account, relief='solid', borderwidth=1, width=75, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
+                                command= lambda i=i: switch_to(account_list[i], sort_type, i))
                 button.grid(column=1, row=(0+i), columnspan=4, sticky='w')
                 self.buttons.append(button)
 
-            for i, type in enumerate(account_list[2]):
+            for i, type in enumerate(type_list): # Creates button displaying account type, moves to tied account when pressed
                 button = Button(self.frame_canvas, text=type, relief='solid', borderwidth=1, width=65, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
+                                command= lambda i=i: switch_to(account_list[i], sort_type, i))
                 button.grid(column=2, row=(0+i), columnspan=4, sticky='w')
                 self.buttons.append(button)          
 
-            for i, balance in enumerate(account_list[3]):
+            for i, balance in enumerate(balance_list): # Creates button displaying account balance, moves to tied account when pressed
                 button = Button(self.frame_canvas, text='{:,}'.format(balance).replace(',', ' '), relief='solid', borderwidth=1, width=20, height=2, anchor='e', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
+                                command= lambda i=i: switch_to(account_list[i], sort_type, i))
                 button.grid(column=3, row=(0+i), sticky='e')
                 self.buttons.append(button)      
 
-            for i, currency in enumerate(account_list[4]):
+            for i, currency in enumerate(currency_list): # Creates button displaying account currency, moves to tied account when pressed
                 button = Button(self.frame_canvas, text=currency, relief='solid', borderwidth=1, width=45, height=2, anchor='w', padx=5,
-                                command= lambda i=i: switch_to(account_list[1][i], sort_type, i))
+                                command= lambda i=i: switch_to(account_list[i], sort_type, i))
                 button.grid(column=4, row=(0+i), columnspan=4, sticky='e')
                 self.buttons.append(button)
             
             self.update_scrollregion()
             
-            if len(self.buttons) < 40:
+            if len(self.buttons) < 40: # If there are more than eight rows of buttons the user gains the ability to scroll the list with mousewheel
                 self.canvas_accounts.unbind_all('<MouseWheel>')
             else:
                 self.canvas_accounts.bind_all('<MouseWheel>', self.on_mousewheel)
             
         except: None
 
-        def switch_to(accountnum, sort_type, i):
+        def switch_to(accountnum, sort_type, i): # Switches to account with matching account number
+            # Stores necessary shared variables
             self.controller.logged_accountnum = accountnum
             self.controller.logged_sorttype = sort_type
             self.controller.logged_i = i
             self.controller.show_frame('Account')
             
-    def update_scrollregion(self):
+    def update_scrollregion(self): # Updates the scrollable region depending on amount of buttons
         def update_scrollregion():   
             self.canvas_accounts.config(scrollregion=self.canvas_accounts.bbox('all'))       
         self.canvas_accounts.after_idle(update_scrollregion)
 
-    def clear(self):        
+    def clear(self): # Removes all buttons if there are any        
         try:
             for button in self.buttons:
                 button.grid_forget()
         except: None
 
-    def update_user(self):
+    def update_user(self): # Displays stored username in label_user widget
         self.label_user.config(text=self.controller.logged_username)
         self.label_user.grid(column=1, row=0, padx=5, sticky='w')
 
-    def on_mousewheel(self, event):
+    def on_mousewheel(self, event): # Scrolls when mousewheel is scrolled
         self.canvas_accounts.yview_scroll(-1*event.delta//120, 'units')
 
-    def tkraise(self, aboveThis=None):
+    def tkraise(self, aboveThis=None): # Executes update_user and update_accounts with default sort_type when frame is raised
         self.update_user()
         self.update_accounts(0)
         super().tkraise(aboveThis)
 
-class Account(Frame):
-
+class Account(Frame): # Sets up "Account" frame
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
+
+        # Imports necessary shared variables
         self.logged_accountnum = self.controller.logged_accountnum
         self.logged_userid = self.controller.logged_userid
         self.logged_sorttype = self.controller.logged_sorttype
         self.logged_i = self.controller.logged_i
 
+        # Creates frame for displaying account operations
         self.frame = Frame(self, borderwidth=1, relief='solid')
+        
+        # Creates label widgets
         label = Label(self, text='Kontonummer:')
         self.label_balance = Label(self, text='', fg='lime green')
         self.label_accountnum = Label(self, text='', fg='magenta')
+
+        # Creates button widgets
         button_back = Button(self, text='Tillbaka',
                              command= lambda: controller.show_frame('Logged_In'))
         self.button_show = Button(self, text='Visa Historik',
@@ -935,19 +985,24 @@ class Account(Frame):
         self.button_delete = Button(self, text='Ta Bort Konto',
                                command= lambda: set_delete())
                 
+        # Defines placement of widgets
         label.grid(column=0, row=0, pady=5)
         self.label_accountnum.grid(column=1, row=0, padx=5)
         self.label_balance.grid(column=2, row=0, sticky='e')
         button_back.grid(column=2, row=0, sticky='w')
         self.frame.grid(column=2, row=2, rowspan=10, sticky='wn', columnspan=3)
+        
+        # Create empty list to store account type specific buttons
         self.buttons = []
 
-
+        # Configures size of specific column and row
         self.columnconfigure(2, weight=1)
         self.rowconfigure(10, weight=1)
         
-        def set_frame(type:str):
+        def set_frame(type:str): # Sets up widgets in frame for deposit or withdraw operation depending on type variable
             self.clear()
+            
+            # Creates widgets for frame
             label_deposit = Label(self.frame, text=type + ':')
             label_note = Label(self.frame, text='Anteckning:')
             button_confirm = Button(self.frame, text='Godkänn',
@@ -956,6 +1011,7 @@ class Account(Frame):
             textbox_note = Text(self.frame, cursor='xterm', width=33, height=5)
             label_message = Label(self.frame, text='')
 
+            # Creates list of currency options
             options_currency = [
                 'SEK',
                 'USD',
@@ -964,16 +1020,18 @@ class Account(Frame):
                 'NOK'
             ]
 
+            # Defines design for optionmenu widget
             style = ttk.Style()
             style.theme_use('clam')
             style.configure('custom.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=3)
             style.map('custom.TMenubutton', background=[('active', 'light gray')])
 
+            # Creates optionmenu widget with options defined above
             clicked_currency = StringVar()
             option_currency = ttk.OptionMenu(self.frame, clicked_currency, self.currency, *options_currency)
             option_currency.config(style='custom.TMenubutton', width=5)
 
-
+            # Defines placement of all widgets within frame
             label_deposit.grid(column=0, row=0, sticky='w', padx=5, pady=5)
             entry_amount.grid(column=0, row=1, sticky='w', padx=5, columnspan=2)
             option_currency.grid(column=2, row=1, sticky='w')
@@ -982,19 +1040,19 @@ class Account(Frame):
             button_confirm.grid(column=3, row=1, padx=5, sticky='e')
             label_message.grid(column=1, row=0, sticky='w', padx=5, columnspan=3)
 
+            # Configures size of column
             self.frame.columnconfigure(3, weight=1)
 
-
-            def trans(type:str):
+            def trans(type:str): # Performs transaction
                 
-                try:
+                try: # Checks if user has provided a valid float for the currency_exchange function
                     value = currency_exchange(entry_amount.get(), self.currency, clicked_currency.get(), 'transaction')
                     
-                    if value <= self.balance or type == 'Insättning':
+                    if value <= self.balance or type == 'Insättning': # Checks if user tries to withdraw more than available balance
                         transaction(self.controller.logged_accountnum, type, value, textbox_note.get('1.0', 'end-1c'))
                         label_message.config(text=type + ' lyckades', fg='lime green')
-                        entry_amount.delete(0, END)
-                        textbox_note.delete('1.0', END)
+                        entry_amount.delete(0, END) # Clears entry widget
+                        textbox_note.delete('1.0', END) # Clears text widget
                         self.update_account(self.sorttype)
                     
                     else:
@@ -1003,8 +1061,10 @@ class Account(Frame):
                 except:
                     label_message.config(text=type + ' måste vara ett belopp', fg='red')
 
-        def set_transfer():
+        def set_transfer(): # Sets up frame for transfer operation
             self.clear()
+            
+            # Creates widgets for frame
             label_transfer = Label(self.frame, text='Överföring:')
             label_account = Label(self.frame, text=self.controller.logged_accountnum, borderwidth=1, relief='solid')
             label_to = Label(self.frame, text='Till')
@@ -1017,8 +1077,7 @@ class Account(Frame):
             entry_account = Entry(self.frame, cursor='xterm')
             textbox_note = Text(self.frame, cursor='xterm', width=33, height=5)
 
-            option_accounts = []
-
+            # Defines styles for optionmenu widgets
             style = ttk.Style()
             style.theme_use('clam')
             style.configure('custom.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=3)
@@ -1026,22 +1085,27 @@ class Account(Frame):
             style.configure('label.TMenubutton', background='white', bordercolor='black', borderthickness=1, arrowsize=0, arrowpadding=0)
             style.map('label.TMenubutton', background=[('active', 'white')])            
 
-            accounts = get_accounts(self.controller.logged_userid, 0)
-            for i, account in enumerate(accounts[0]):
+            option_accounts = [] # Creates list to store all of users other accounts
+            accounts = get_accounts(self.controller.logged_userid, 0) # Retrieves accounts
+            
+            for i, account in enumerate(accounts[0]): # Appends account names to previously defined list along with account number
                 if i != self.controller.logged_i:
                     new_account = str(account).strip("[']")
                     option_accounts.append(new_account + ': ' + str(accounts[1][i]))
-            option_accounts.append('Annan användare...')
+            option_accounts.append('Annan användare...') # Adds option to transfer to other users account
             
-            def on_option_change(*args):
+            def on_option_change(*args): # When option in optionmenu is changed check if "Annan användare..." is selected
                 if clicked_account.get() == 'Annan användare...':
                     option_accounts.grid_forget()
-                    entry_account.grid(column=2, row=2, sticky='w', columnspan=10)
+                    entry_account.grid(column=2, row=2, sticky='w', columnspan=10) # Adds entry widget instead of optionmenu
             
+            # Creates optionmenu for selecting other account
             clicked_account = StringVar()
             clicked_account.trace_add('write', on_option_change)
             option_accounts = ttk.OptionMenu(self.frame, clicked_account, 'Välj Konto', *option_accounts)
             option_accounts.config(width=15, style='custom.TMenubutton')
+            
+            # Creates optionmenus without the ability to select options in order to create a label with a similar design to the previous optionmenu
             current_account = StringVar()
             current_currency = StringVar()
             label_account = ttk.OptionMenu(self.frame, current_account, self.controller.logged_accountnum)
@@ -1049,6 +1113,7 @@ class Account(Frame):
             label_currency = ttk.OptionMenu(self.frame, current_currency, self.currency)
             label_currency.config(width=4, style='label.TMenubutton')
 
+            # Defines placement of all widgets within frame
             label_transfer.grid(column=0, row=0, sticky='w', columnspan=3, padx=5)
             label_error.grid(column=0, row=1, sticky='w', padx=5, columnspan=10)
             label_account.grid(column=0, row=2, pady=5, sticky='w', padx=5)
@@ -1060,48 +1125,54 @@ class Account(Frame):
             entry_amount.grid(column=0, row=3, sticky='w', padx=5, pady=5, columnspan=3)
             button_confirm.grid(column=3, row=3, sticky='e', padx=5)
 
+            # Configures size of column
             self.frame.columnconfigure(3, weight=1)
 
-            def transfer():
-                try:
+            def transfer(): # Performs transfer operation
+                
+                try: # Checks if user has provided a valid float
                     value = float(entry_amount.get())
+                    
+                    # Retrieves account number for selected or provided account
                     if clicked_account.get() == 'Annan användare...':
                         transfer_account = entry_account.get()
                     else:
                         transfer_account = clicked_account.get().split(': ')
 
-                except:
+                except: # Displays error message
                     label_error.config(text='Överföring måste vara ett belopp', fg='red')
                     return
 
+                # Checks if transfer is valid and if user has selected an account to transfer to from the provided list
                 if clicked_account.get() != 'Välj Konto' and value < self.balance and entry_account.get() == '':
                     error, text = account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'), self.currency)
-                    if error: 
+                    if error: # Transfer has been performed
                         label_error.config(text='Överföring lyckades', fg='lime green')
                         self.update_account(self.sorttype)
 
                     elif error == False:
                         label_error.config(text=text, fg='red')
 
-                elif entry_account.get() != '':
+                elif entry_account.get() != '': # Checks if user has provided anything in the entry_account widget
+                    
                     res = check_account(transfer_account)
 
-                    if res:
+                    if res: # Checks if account number is valid
                         error, text = account_transfer(self.controller.logged_accountnum, transfer_account, value, textbox_note.get('1.0', 'end-1c'), self.currency)
-                        if error: 
+                        if error: # Transfer has been performed
                             label_error.config(text='Överföring lyckades', fg='lime green')
                             self.update_account(self.sorttype)
 
                         elif value > self.balance:
                             label_error.config(text='För stort belopp', fg='red')
                     
-                    elif not res:
+                    elif res == False:
                         label_error.config(text='Kan endast överföra till \nandra användares betalkonto', fg='red')
 
                     elif res == None:
                         label_error.config(text='Felaktigt kontonummer', fg='red')
                     
-        def show_plot():
+        def show_plot(): # Sets up frame to display matplotlib plot of account history
             self.clear()
             balance, dates = balance_history(self.controller.logged_accountnum)
             title = {'family':'sans-serif','color':'black','size':14}
@@ -1123,9 +1194,10 @@ class Account(Frame):
             canvas.draw()
             canvas.get_tk_widget().pack()
             
-        def show_history():
+        def show_history(): # Sets up frame to display account history
             self.clear()
 
+            # Creates widgets for frame
             label_date = Label(self.frame, text='Datum', relief='ridge', bg='white', borderwidth=1)
             label_transaction = Label(self.frame, text='Transaktionstyp', relief='ridge', bg='white', borderwidth=1)
             label_amount = Label(self.frame, text='Överfört Belopp', relief='ridge', bg='white', borderwidth=1)
@@ -1136,24 +1208,26 @@ class Account(Frame):
             listbox_history_note = Listbox(self.frame, relief='ridge')
             listboxes = [listbox_history_date, listbox_history_transaction, listbox_history_amount, listbox_history_note]
             
+            # Retrieves account history and splits it into four lists
             amount_list, transaction_list, date_list, note_list = get_history(self.controller.logged_accountnum, self.currency)
             
             for i in date_list: # Adds dates to first listbox
                 listbox_history_date.insert(END, i)
             listbox_history_date.grid(column=0, row=1, sticky='nswe')
 
-            for i in transaction_list:
+            for i in transaction_list: # Adds transaction types to second listbox
                 listbox_history_transaction.insert(END, i)
             listbox_history_transaction.grid(column=1, row=1, sticky='nswe')
 
-            for i in amount_list:
+            for i in amount_list: # Adds transfered amount to third listbox
                 listbox_history_amount.insert(END, i)
             listbox_history_amount.grid(column=2, row=1, sticky='nswe')
 
-            for i in note_list:
+            for i in note_list: # Adds user-provided note to third listbox
                 listbox_history_note.insert(END, i)
             listbox_history_note.grid(column=3, row=1, sticky='nswe')
                     
+            # Defines placement of labels in frame
             label_date.grid(column=0, row=0, sticky='nswe')
             label_transaction.grid(column=1, row=0, sticky='nswe')
             label_amount.grid(column=2, row=0, sticky='nswe')
@@ -1167,8 +1241,10 @@ class Account(Frame):
             for listbox in listboxes: # Binds MouseWheel to function giving it control over listboxes
                 listbox.bind('<MouseWheel>', on_mousewheel)                        
         
-        def set_delete():
+        def set_delete(): # Sets up frame to delete current account
             self.clear()
+            
+            # Creates widgets for frame
             label_delete = Label(self.frame, text='Radera Konto:')
             label_warning = Label(self.frame, text='Detta går inte att ångra!', font=('Courier', 8))
             label_message = Label(self.frame, text='')
@@ -1177,7 +1253,7 @@ class Account(Frame):
             button_confirm = Button(self.frame, text='Bekräfta',
                                     command= lambda: delete())
 
-            
+            # Defines placement of widgets within frame
             label_delete.grid(column=0, row=0, sticky='w', padx=5, pady=2)
             label_warning.grid(column=0, row=1, sticky='w', padx=5, columnspan=3)
             label_message.grid(column=0, row=2, sticky='w', padx=5, columnspan=3)
@@ -1185,50 +1261,49 @@ class Account(Frame):
             entry_pin.grid(column=1, row=3, sticky='w')
             button_confirm.grid(column=2, row=3, sticky='w', padx=5)
             
-            def delete():
+            def delete(): # Switches button when "Bekräfta" button is pressed
                 button_confirm.config(text='Är du säker?', command= lambda: delete_confirm())
 
-            def delete_confirm():
+            def delete_confirm(): # Attempts to delete account
                 result = delete_account(self.controller.logged_accountnum, entry_pin.get())
 
-                if result[0] == False:
+                if result[0] == False: # User provided incorrect password
                     label_message.config(text='Fel lösenord, kontot har inte tagits bort', fg='red')
                     self.after(500, lambda: reset())
 
-                elif result[0] == None:
+                elif result[0] == None: # Account was not empty
                     label_message.config(text='Kontot måste tömmas innan det kan raderas', fg='red')
                     self.after(500, lambda: reset())
 
-                elif result[0] == True:
+                elif result[0] == True: # Account has successfully been removed
                     label_message.config(text='Kontot har tagits bort', fg='lime green')
                     self.after(1000, lambda: controller.show_frame('Logged_In'))
 
-            def reset():
+            def reset(): # Resets frame to inital state
                 button_confirm.config(text='Bekräfta', command= lambda: delete())
                 entry_pin.delete(0, END)
 
-    def check_buttons(self):
-
+    def check_buttons(self): # Defines placement of all buttons in self.buttons list
         for i ,button in enumerate(self.buttons):
             button.grid(column=0, row=1+i, sticky='w', padx=5, pady=3, columnspan=2)
 
-    def clear_buttons(self):
+    def clear_buttons(self): # Resets buttons
         for button in self.buttons:
             button.grid_forget()
 
-        if not self.controller.logged_accountnum % 2:
+        if not self.controller.logged_accountnum % 2: # Checks account type
             self.buttons = [self.button_transaction, self.button_show, self.button_history, self.button_delete]
         
         else:
             self.buttons = [self.button_deposit, self.button_withdraw, self.button_transaction, self.button_show, self.button_history, self.button_delete]
 
 
-    def clear(self):
+    def clear(self): # Removes frame containing operations and recreates it blank
         self.frame.destroy()
         self.frame = Frame(self, borderwidth=1, relief='solid')
         self.frame.grid(column=2, row=2, rowspan=10, sticky='n')        
 
-    def update_account(self, sort_type):
+    def update_account(self, sort_type): # Updates account number and balance displayed at the top of the frame
         accounts = get_accounts(self.controller.logged_userid, sort_type)
         self.balance = accounts[3][self.controller.logged_i]
         currency = accounts[4][self.controller.logged_i]
@@ -1236,7 +1311,7 @@ class Account(Frame):
         self.label_balance.config(text='Saldo: ' + '{:,}'.format(self.balance).replace(',', ' ') + ' ' + str(self.currency))
         self.label_accountnum.config(text=self.controller.logged_accountnum)
 
-    def tkraise(self, aboveThis=None):
+    def tkraise(self, aboveThis=None): # Executes clear, update_account, clear_buttons and check_buttons functions along with importing sorttype shared varible whenever frame is raised
         self.sorttype = self.controller.logged_sorttype
         self.clear()
         self.update_account(self.sorttype)
@@ -1244,11 +1319,12 @@ class Account(Frame):
         self.check_buttons()
         super().tkraise(aboveThis)
         
-class Admin(Frame):
-    
+class Admin(Frame): # Sets up "Admin" frame
     def __init__(self, parent, controller):
         Frame.__init__(self, parent)
         self.controller = controller
+
+        # Creates widgets for frame
         label_title = Label(self, text=text_admin, font=('Courier', 8), justify=LEFT)
         self.entry_user = Entry(self, cursor='xterm')
         button_reset_trys = Button(self, text='Återställ Försök',
@@ -1256,16 +1332,18 @@ class Admin(Frame):
         button_back = Button(self, text='Gå Tillbaka',
                              command= lambda: controller.show_frame('StartPage'))
         
+        # Defines placement of all widgets in frame
         label_title.grid(column=0, row=0, sticky='n', columnspan=2)
         self.entry_user.grid(column=0, row=1, sticky='e', padx=10)
         button_reset_trys.grid(column=1, row=1, sticky='w')
         button_back.grid(column=0, row=6, pady=10, sticky='s', columnspan=2)
         
+        # Configues size of columns and row
         self.columnconfigure(0, weight=1)
         self.columnconfigure(1, weight=1)
         self.rowconfigure(6, weight=1)
         
-        def reset(username):
+        def reset(username): # Resets number of login attempts for provided user account
             id = check_username(username)
             if id[0] == True:
                 print('Attempts Reset')
@@ -1273,10 +1351,10 @@ class Admin(Frame):
             else:
                 print('Account Not Found')    
                     
-    def clearframe(self):
+    def clearframe(self): # Clear entry widget
         self.entry_user.delete(0, END)
         
-    def tkraise(self, aboveThis=None):
+    def tkraise(self, aboveThis=None): # Executes clearframe function whenever frame is raised
         self.clearframe()
         super().tkraise(aboveThis)
 
