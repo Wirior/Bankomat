@@ -1144,7 +1144,7 @@ class Account(Frame): # Sets up "Account" frame
                     return
 
                 # Checks if transfer is valid and if user has selected an account to transfer to from the provided list
-                if clicked_account.get() != 'Välj Konto' and value < self.balance and entry_account.get() == '':
+                if clicked_account.get() != 'Välj Konto' and value <= self.balance and entry_account.get() == '':
                     error, text = account_transfer(self.controller.logged_accountnum, transfer_account[1].strip("'"), value, textbox_note.get('1.0', 'end-1c'), self.currency)
                     if error: # Transfer has been performed
                         label_error.config(text='Överföring lyckades', fg='lime green')
